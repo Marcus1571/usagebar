@@ -1,6 +1,6 @@
 # UsageBar
 
-A small macOS menu-bar app that shows how much of your **Claude**, **ChatGPT (Codex)** and **Grok** quota you have left, at a glance.
+A small macOS menu-bar app that shows how much of your **Claude**, **ChatGPT (Codex)**, **Grok** and **OpenCode Go** quota you have left, at a glance.
 
 <p align="center">
   <img src="docs/menubar-dark.png" height="40" alt="Menu bar, dark">
@@ -26,6 +26,7 @@ UsageBar **never writes** a token, a Keychain item or any provider config. The o
 | Claude | Keychain item `Claude Code-credentials` (fallback: `~/.claude/.credentials.json`) | `api.anthropic.com/api/oauth/usage` |
 | Codex / ChatGPT | `~/.codex/auth.json` | `chatgpt.com/backend-api/wham/usage` |
 | Grok | `~/.grok/auth.json` | `cli-chat-proxy.grok.com/v1/billing` |
+| OpenCode Go | `~/.local/share/opencode/auth.json` (`opencode auth login`) | `opencode.ai/zen/go/v1/usage` |
 
 If the Claude login has expired it does not call at all and tells you to use Claude Code once, which renews itself. For Grok, when the token is stale it runs `grok models` (at most once every 20 minutes) so the Grok CLI renews itself.
 
@@ -40,7 +41,7 @@ UsageBar is idle between refreshes (idle CPU is about 0.0%). It wakes once every
 ## Requirements
 
 - macOS 14 or later (Apple Silicon or Intel, built for the machine you build on)
-- The CLIs you want shown, signed in at least once: Claude Code, Codex, Grok. Providers without a login show a short hint instead.
+- The CLIs you want shown, signed in at least once: Claude Code, Codex, Grok, OpenCode (Go plan). Providers without a login show a short hint instead.
 - Xcode Command Line Tools (`xcode-select --install`) to build. No Xcode project is needed.
 
 ## Build and install

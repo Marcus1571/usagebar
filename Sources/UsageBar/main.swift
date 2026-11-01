@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 import Combine
 
-// UsageBar: Claude / Codex / Grok limits in the macOS menu bar. Read-only.
+// UsageBar: Claude / Codex / Grok / OpenCode Go limits in the macOS menu bar. Read-only.
 //   UsageBar --dump          fetch once and print (no UI)
 //   UsageBar --selftest      run the parser checks
 //   UsageBar --render DIR    write label + popover PNGs with live data (no UI)

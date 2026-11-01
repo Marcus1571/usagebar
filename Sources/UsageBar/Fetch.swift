@@ -297,6 +297,43 @@ enum Grok {
     }
 }
 
+// MARK: - OpenCode Go
+
+enum OpenCodeGo {
+    static let url = "https://opencode.ai/zen/go/v1/usage"
+
+    /// `opencode auth login` stores the key under the "opencode" provider (a Go service-account key works too).
+    static func readKey() -> String? {
+        guard let d = FileManager.default.contents(atPath: NSHomeDirectory() + "/.local/share/opencode/auth.json"),
+              let entry = jsonObject(d)?["opencode"] as? [String: Any],
+              let key = entry["key"] as? String, !key.isEmpty else { return nil }
+        return key
+    }
+
+    static func fetch() async throws -> Snapshot {
+        guard let key = readKey() else { throw Failure("Not signed in: run `opencode auth login`") }
+        let (status, data) = try await Http.get(url, ["Authorization": "Bearer \(key)"])
+        switch status {
+        case 200..<300: return try parse(data)
+        case 401: throw Failure("OpenCode key is invalid: run `opencode auth login`")
+        case 403: throw Failure("No OpenCode Go subscription on this key")
+        case 429: throw Failure("Rate limited: will retry")
+        default: throw Failure("OpenCode Go usage returned HTTP \(status)")
+        }
+    }
+
+    static func parse(_ data: Data) throws -> Snapshot {
+        guard let usage = jsonObject(data)?["usage"] as? [String: Any] else { throw Failure("Unexpected OpenCode Go response") }
+        var windows: [UsageWindow] = []
+        for (key, label) in [("rolling", "5-hour session"), ("weekly", "Weekly"), ("monthly", "Monthly")] {
+            guard let w = usage[key] as? [String: Any], let pct = num(w["percent"]) else { continue }
+            windows.append(UsageWindow(label: label, usedPercent: pct, resetsAt: parseDate(w["resetsAt"] as? String)))
+        }
+        guard !windows.isEmpty else { throw Failure("This key has no Go usage limits") }
+        return Snapshot(plan: nil, windows: windows)
+    }
+}
+
 /// "max_5x" -> "Max 5x" (only the first letter of each word, so "5x" is not turned into "5X").
 func prettyPlan(_ raw: String) -> String {
     raw.split(whereSeparator: { $0 == "_" || $0 == " " })
@@ -309,5 +346,6 @@ func fetch(_ p: Provider) async throws -> Snapshot {
     case .claude: try await Claude.fetch()
     case .codex: try await Codex.fetch()
     case .grok: try await Grok.fetch()
+    case .opencodeGo: try await OpenCodeGo.fetch()
     }
 }

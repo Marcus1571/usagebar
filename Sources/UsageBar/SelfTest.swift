@@ -62,6 +62,14 @@ func selfTest() {
     check((try? Grok.parse(Data(grokZero.utf8)))?.windows[0].usedPercent == 0, "grok: omitted percent = 0")
     check((try? Grok.parse(Data("{}".utf8))) == nil, "grok: empty response is an error")
 
+    // OpenCode Go: rolling / weekly / monthly percentages
+    let go = #"{"usage":{"rolling":{"status":"ok","percent":0,"resetsAt":"2026-11-01T22:49:10.835Z"},"weekly":{"status":"ok","percent":12,"resetsAt":"2026-11-02T00:00:00.000Z"},"monthly":{"status":"ok","percent":1,"resetsAt":"2026-11-11T14:26:14.000Z"}}}"#
+    if let s = try? OpenCodeGo.parse(Data(go.utf8)) {
+        check(s.windows.map(\.label) == ["5-hour session", "Weekly", "Monthly"], "opencode go: three windows in order")
+        check(s.windows[1].usedPercent == 12 && s.windows[1].resetsAt != nil, "opencode go: weekly 12% with reset")
+    } else { check(false, "opencode go: parses") }
+    check((try? OpenCodeGo.parse(Data("{}".utf8))) == nil, "opencode go: empty response is an error")
+
     // formatting
     let now = Date(timeIntervalSince1970: 1_000_000)
     check(resetText(now.addingTimeInterval(2 * 3600 + 10 * 60 + 5), now: now) == "Resets in 2h 10m", "format: hours")
