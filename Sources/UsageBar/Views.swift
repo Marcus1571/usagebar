@@ -199,12 +199,36 @@ struct Bar: View {
 
 // MARK: - rendering
 
+/// Identity of everything the label shows; equal keys mean the image would be identical.
+func labelKey(states: [Provider: ProviderState], showLeft: Bool) -> String {
+    Provider.allCases.map { p in
+        let s = states[p]
+        let w = (s?.snapshot?.windows ?? []).prefix(2).map { "\(Int((showLeft ? $0.leftPercent : $0.usedPercent).rounded()))/\($0.leftPercent <= 20 ? 2 : $0.leftPercent <= 40 ? 1 : 0)" }
+        return "\(w.joined(separator: ","))\(s?.error != nil ? "!" : "")"
+    }.joined(separator: "|")
+}
+
 @MainActor
 func renderLabel(states: [Provider: ProviderState], showLeft: Bool, dark: Bool) -> NSImage? {
     let r = ImageRenderer(content: LabelView(states: states, showLeft: showLeft, dark: dark))
     r.scale = NSScreen.main?.backingScaleFactor ?? 2
     guard let cg = r.cgImage else { return nil }
     let img = NSImage(cgImage: cg, size: NSSize(width: CGFloat(cg.width) / r.scale, height: CGFloat(cg.height) / r.scale))
+    img.isTemplate = false
+    return img
+}
+
+/// One image holding a light and a dark rendering; AppKit picks the right one when it draws, using the
+/// appearance of whatever it draws into (the menu bar). No observer needed.
+@MainActor
+func adaptiveLabel(states: [Provider: ProviderState], showLeft: Bool) -> NSImage? {
+    guard let light = renderLabel(states: states, showLeft: showLeft, dark: false),
+          let dark = renderLabel(states: states, showLeft: showLeft, dark: true) else { return nil }
+    let img = NSImage(size: light.size, flipped: false) { rect in
+        let isDark = NSAppearance.currentDrawing().bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        (isDark ? dark : light).draw(in: rect)
+        return true
+    }
     img.isTemplate = false
     return img
 }

@@ -33,6 +33,10 @@ Credentials go only to the provider's own host, nowhere else. There is no teleme
 
 > **Heads-up:** these usage endpoints are undocumented and are the ones the official tools use. They can change or break without notice, and using them may not be covered by a provider's terms. Use at your own risk.
 
+## Energy use
+
+UsageBar is idle between refreshes (idle CPU is about 0.0%). It wakes once every 5 minutes (with tolerance, so macOS can batch the wake-up), after the Mac wakes, and when you open the popover. The menu-bar label is re-rendered only when a displayed value changes, and the popover exists only while it is open.
+
 ## Requirements
 
 - macOS 14 or later (Apple Silicon or Intel, built for the machine you build on)

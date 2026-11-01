@@ -80,6 +80,13 @@ enum Shell {
     }
 }
 
+actor CredCache {
+    private var creds: Claude.Creds?
+    func get() -> Claude.Creds? { creds }
+    func set(_ c: Claude.Creds) { creds = c }
+    func clear() { creds = nil }
+}
+
 actor Throttle {
     private var last = Date.distantPast
     func allow(every seconds: TimeInterval) -> Bool {
@@ -97,16 +104,34 @@ enum Claude {
 
     struct Creds { var token: String; var expiresAt: Date?; var plan: String? }
 
+    /// The login is cached in memory until it expires, so the `security` subprocess is not spawned every refresh.
+    private static let cache = CredCache()
+
     static func fetch() async throws -> Snapshot {
-        guard let c = await readCreds() else { throw Failure("Not signed in: run `claude` once") }
-        if let exp = c.expiresAt, exp < Date() { throw Failure(staleMessage) }
-        let (status, data) = try await Http.get(url, ["Authorization": "Bearer \(c.token)", "anthropic-beta": "oauth-2025-04-20"])
+        var cached = true
+        var creds = await cache.get()
+        if creds == nil { creds = await readCreds(); cached = false }
+        guard var c = creds else { throw Failure("Not signed in: run `claude` once") }
+        if let exp = c.expiresAt, exp < Date() {
+            // the cached one ran out: the CLI may have renewed the login since
+            guard cached, let fresh = await readCreds(), (fresh.expiresAt ?? .distantFuture) > Date() else { await cache.clear(); throw Failure(staleMessage) }
+            c = fresh; cached = false
+        }
+        var (status, data) = try await Http.get(url, headers(c))
+        if cached, status == 401 || status == 403, let fresh = await readCreds() {   // rotated login: retry once
+            c = fresh
+            (status, data) = try await Http.get(url, headers(c))
+        }
         switch status {
-        case 200..<300: return try parse(data, plan: c.plan)
-        case 401, 403: throw Failure(staleMessage)
+        case 200..<300: await cache.set(c); return try parse(data, plan: c.plan)
+        case 401, 403: await cache.clear(); throw Failure(staleMessage)
         case 429: throw Failure("Rate limited: will retry")
         default: throw Failure("Claude usage returned HTTP \(status)")
         }
+    }
+
+    private static func headers(_ c: Creds) -> [String: String] {
+        ["Authorization": "Bearer \(c.token)", "anthropic-beta": "oauth-2025-04-20"]
     }
 
     /// Keychain first (that is Claude Code's live login); the file is only a fallback.

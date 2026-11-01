@@ -9,3 +9,13 @@ Small project, small rules.
 5. **Adding a provider:** add a case to `Provider`, a client in `Fetch.swift` that reads its CLI's own credentials, and a self-test.
 
 Build with `./scripts/build-app.sh` and check the popover in both light and dark mode before opening a pull request.
+
+## Energy rules
+
+A menu-bar app must be idle when nothing changed. Please keep these:
+
+- Never observe `NSStatusBarButton.effectiveAppearance` (or anything macOS changes when the image is set) and set `button.image` from the observer: it loops forever. The label draws itself per appearance in `adaptiveLabel`.
+- Only re-render when the visible content changes (`labelKey`).
+- Timers get a tolerance; no polling faster than needed; nothing running while the popover is closed.
+- After a UI change, check idle CPU: `top -l 3 -s 10 -pid $(pgrep -x UsageBar) -stats pid,cpu,idlew` should stay near 0.0.
+

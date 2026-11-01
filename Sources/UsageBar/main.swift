@@ -8,13 +8,13 @@ import Combine
 //   UsageBar --render DIR    write label + popover PNGs with live data (no UI)
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     let store = Store()
     var item: NSStatusItem!
     let popover = NSPopover()
     var cancellables = Set<AnyCancellable>()
-    var appearanceObserver: NSKeyValueObservation?
     var timer: Timer?
+    var lastLabelKey = ""
 
     func applicationDidFinishLaunching(_ note: Notification) {
         item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -22,17 +22,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         item.button?.action = #selector(toggle)
 
         popover.behavior = .transient
-        let host = NSHostingController(rootView: PopoverView(store: store, onQuit: { NSApp.terminate(nil) }))
-        host.sizingOptions = .preferredContentSize   // popover follows the SwiftUI content height
-        popover.contentViewController = host
+        popover.delegate = self   // the SwiftUI content only exists while the popover is open
 
         store.objectWillChange.sink { [weak self] _ in DispatchQueue.main.async { self?.updateLabel() } }.store(in: &cancellables)
-        appearanceObserver = item.button?.observe(\.effectiveAppearance) { [weak self] _, _ in
-            DispatchQueue.main.async { self?.updateLabel() }
-        }
         timer = Timer.scheduledTimer(withTimeInterval: 300, repeats: true) { [weak self] _ in
             Task { @MainActor in await self?.store.refresh() }
         }
+        timer?.tolerance = 60   // lets macOS batch our wake-up with other work
         NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
             Task { @MainActor in await self?.store.refresh() }
         }
@@ -43,19 +39,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    /// Re-renders only when something visible changed. The image draws itself in the menu bar's own
+    /// appearance, so there is no appearance observer (observing it and re-setting the image loops forever).
     func updateLabel() {
-        let dark = (item.button?.effectiveAppearance ?? NSApp.effectiveAppearance).bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        item.button?.image = renderLabel(states: store.states, showLeft: store.showLeft, dark: dark)
+        let key = labelKey(states: store.states, showLeft: store.showLeft)
+        guard key != lastLabelKey else { return }
+        lastLabelKey = key
+        item.button?.image = adaptiveLabel(states: store.states, showLeft: store.showLeft)
     }
 
     @objc func toggle() {
         if popover.isShown { popover.performClose(nil); return }
         guard let b = item.button else { return }
-        if let v = popover.contentViewController?.view { popover.contentSize = v.fittingSize }
+        let host = NSHostingController(rootView: PopoverView(store: store, onQuit: { NSApp.terminate(nil) }))
+        host.sizingOptions = .preferredContentSize   // popover follows the SwiftUI content height
+        popover.contentViewController = host
+        popover.contentSize = host.view.fittingSize
         popover.show(relativeTo: b.bounds, of: b, preferredEdge: .minY)
         popover.contentViewController?.view.window?.makeKey()
         Task { await store.refresh() }
     }
+
+    func popoverDidClose(_ notification: Notification) { popover.contentViewController = nil }
 }
 
 @MainActor
