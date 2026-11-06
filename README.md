@@ -1,5 +1,7 @@
 # UsageBar
 
+[Reference: KB.md](KB.md) · [Changelog](CHANGELOG.md)
+
 A small macOS menu-bar app that shows how much of your **Claude**, **ChatGPT (Codex)**, **Grok** and **OpenCode Go** quota you have left, at a glance.
 
 <p align="center">
@@ -57,37 +59,7 @@ Without `--install` the app is left in `build/UsageBar.app`. To start it at logi
 
 The build uses plain `swiftc` on purpose: it is one module, and SwiftPM is broken on some Command Line Tools versions.
 
-### Signing and distribution
-
-This repository ships **no certificates, no signed binaries and no Apple account details**. You build and sign your own copy:
-
-- **Default:** ad-hoc signature (`codesign --sign -`). It runs fine on the Mac that built it and needs no Apple account.
-- **Your own certificate:** `SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" ./scripts/build-app.sh` signs with your Developer ID. Notarize it yourself with `xcrun notarytool` if you want to hand it to other people without a Gatekeeper warning.
-- **Your own bundle id:** the default is `local.usagebar`; override it with `BUNDLE_ID=com.example.usagebar`.
-- **Sharing an ad-hoc build:** Gatekeeper blocks a downloaded copy on another Mac. Open System Settings → Privacy & Security and choose **Open Anyway**, or run `xattr -dr com.apple.quarantine UsageBar.app`. Building from source on that Mac avoids the warning.
-
-## Command line
-
-```sh
-build/UsageBar --selftest        # parser checks against real response shapes (no network)
-build/UsageBar --dump            # fetch once and print the numbers, no UI
-build/UsageBar --render DIR      # write label and popover PNGs with live data
-build/UsageBar --open            # launch and auto-open the popover (handy for screenshots)
-```
-
-## Project layout
-
-```
-Sources/UsageBar/
-  Model.swift      Provider, UsageWindow, Snapshot, ProviderState
-  Fetch.swift      credentials readers and the three provider clients
-  Store.swift      refresh logic (rate limit, concurrent fetch, keeps last good data)
-  Views.swift      menu-bar label (rendered to an image) and popover
-  SelfTest.swift   parser and formatting checks
-  main.swift       app delegate, status item, CLI modes
-scripts/build-app.sh   build, bundle, sign, install
-scripts/make-icon.sh   icon/icon.svg -> icon/AppIcon.icns (needs librsvg)
-```
+Signing with your own Developer ID, a custom bundle id, the command-line test modes and the source layout are all in the [knowledge base](KB.md#signing-and-distribution).
 
 ## Contributing
 
