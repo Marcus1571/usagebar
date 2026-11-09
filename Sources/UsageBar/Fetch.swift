@@ -334,6 +334,47 @@ enum OpenCodeGo {
     }
 }
 
+// MARK: - GitHub Copilot
+
+enum Copilot {
+    static let url = "https://api.github.com/copilot_internal/user"
+
+    /// The GitHub CLI's own login (`gh auth login`); `gh auth token` only prints it.
+    static func readToken() async -> String? {
+        guard let gh = Shell.findCLI("gh"), let out = await Shell.run(gh, ["auth", "token"], timeout: 10) else { return nil }
+        let token = out.trimmingCharacters(in: .whitespacesAndNewlines)
+        return token.isEmpty ? nil : token
+    }
+
+    static func fetch() async throws -> Snapshot {
+        guard let token = await readToken() else { throw Failure("Not signed in: run `gh auth login`", notSignedIn: true) }
+        let (status, data) = try await Http.get(url, ["Authorization": "token \(token)"])
+        switch status {
+        case 200..<300: return try parse(data)
+        case 401: throw Failure("GitHub login is invalid: run `gh auth login`")
+        case 404: throw Failure("No Copilot on this GitHub account", notSignedIn: true)   // gh without Copilot: nothing to show
+        case 429: throw Failure("Rate limited: will retry")
+        default: throw Failure("Copilot usage returned HTTP \(status)")
+        }
+    }
+
+    static func parse(_ data: Data) throws -> Snapshot {
+        guard let root = jsonObject(data), let snaps = root["quota_snapshots"] as? [String: Any] else { throw Failure("Unexpected Copilot response") }
+        let reset = parseDate(root["quota_reset_date_utc"] as? String)
+        var windows: [UsageWindow] = []
+        // Unlimited and zero-entitlement quotas (premium requests on Free) are not limits worth showing.
+        for (key, label) in [("premium_interactions", "Premium requests"), ("chat", "Chat"), ("completions", "Completions")] {
+            guard let q = snaps[key] as? [String: Any], (q["unlimited"] as? Bool) != true,
+                  (num(q["entitlement"]) ?? 0) > 0, let left = num(q["percent_remaining"]) else { continue }
+            windows.append(UsageWindow(label: label, usedPercent: 100 - left, resetsAt: reset))
+        }
+        guard !windows.isEmpty else { throw Failure("This Copilot plan has no usage limits") }
+        let sku = root["access_type_sku"] as? String ?? ""
+        let plan = sku.contains("free") ? "Free" : (root["copilot_plan"] as? String).map(prettyPlan)
+        return Snapshot(plan: plan, windows: windows)
+    }
+}
+
 /// "max_5x" -> "Max 5x" (only the first letter of each word, so "5x" is not turned into "5X").
 func prettyPlan(_ raw: String) -> String {
     raw.split(whereSeparator: { $0 == "_" || $0 == " " })
@@ -347,5 +388,6 @@ func fetch(_ p: Provider) async throws -> Snapshot {
     case .codex: try await Codex.fetch()
     case .grok: try await Grok.fetch()
     case .opencodeGo: try await OpenCodeGo.fetch()
+    case .copilot: try await Copilot.fetch()
     }
 }

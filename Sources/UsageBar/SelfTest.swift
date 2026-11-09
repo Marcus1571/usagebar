@@ -70,12 +70,23 @@ func selfTest() {
     } else { check(false, "opencode go: parses") }
     check((try? OpenCodeGo.parse(Data("{}".utf8))) == nil, "opencode go: empty response is an error")
 
+    // Copilot (free plan, 2026-11-09): premium has no entitlement and is skipped; monthly reset date
+    let copilot = #"{"access_type_sku":"free_limited_copilot","copilot_plan":"individual","quota_reset_date_utc":"2026-12-01T00:00:00.000Z","quota_snapshots":{"chat":{"entitlement":200,"percent_remaining":87.5,"remaining":175,"unlimited":false},"completions":{"entitlement":2000,"percent_remaining":100.0,"remaining":2000,"unlimited":false},"premium_interactions":{"entitlement":0,"percent_remaining":0.0,"remaining":0,"unlimited":false}}}"#
+    if let s = try? Copilot.parse(Data(copilot.utf8)) {
+        check(s.windows.map(\.label) == ["Chat", "Completions"], "copilot: zero-entitlement premium skipped")
+        check(s.windows[0].usedPercent == 12.5 && s.windows[0].resetsAt != nil, "copilot: chat 12.5% used, reset date")
+        check(s.plan == "Free", "copilot: free plan name")
+    } else { check(false, "copilot: parses") }
+    let copilotPro = #"{"copilot_plan":"individual_pro","quota_snapshots":{"chat":{"entitlement":0,"percent_remaining":100,"unlimited":true},"premium_interactions":{"entitlement":300,"percent_remaining":40,"unlimited":false}}}"#
+    check((try? Copilot.parse(Data(copilotPro.utf8)))?.windows.map(\.label) == ["Premium requests"], "copilot: unlimited chat skipped, premium shown")
+    check((try? Copilot.parse(Data("{}".utf8))) == nil, "copilot: empty response is an error")
+
     // menu bar: a provider with no credentials is left out; a real error still shows
     var st: [Provider: ProviderState] = [:]
     st[.opencodeGo] = ProviderState(error: "Not signed in", notSignedIn: true)
     st[.grok] = ProviderState(error: "Grok billing returned HTTP 500")
-    check(shownProviders(st) == [.claude, .codex, .grok], "label: not-signed-in provider hidden, failing one kept")
-    check(labelKey(states: st, showLeft: true).split(separator: "|", omittingEmptySubsequences: false).count == 3, "label key: hidden provider not counted")
+    check(shownProviders(st) == [.claude, .codex, .grok, .copilot], "label: not-signed-in provider hidden, failing one kept")
+    check(labelKey(states: st, showLeft: true).split(separator: "|", omittingEmptySubsequences: false).count == 4, "label key: hidden provider not counted")
 
     // formatting
     let now = Date(timeIntervalSince1970: 1_000_000)

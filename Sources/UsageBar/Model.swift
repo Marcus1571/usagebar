@@ -1,7 +1,7 @@
 import Foundation
 
 enum Provider: String, CaseIterable, Sendable {
-    case claude, codex, grok, opencodeGo
+    case claude, codex, grok, opencodeGo, copilot
 
     var title: String {
         switch self {
@@ -9,6 +9,7 @@ enum Provider: String, CaseIterable, Sendable {
         case .codex: "Codex"
         case .grok: "Grok"
         case .opencodeGo: "OpenCode Go"
+        case .copilot: "Copilot"
         }
     }
 
@@ -19,6 +20,7 @@ enum Provider: String, CaseIterable, Sendable {
         case .codex: "terminal"
         case .grok: "slash.circle"
         case .opencodeGo: "chevron.left.forwardslash.chevron.right"
+        case .copilot: "airplane"
         }
     }
 }

@@ -104,11 +104,20 @@ struct PopoverView: View {
                     .pickerStyle(.segmented).labelsHidden().frame(width: 120)
                 }
             }
-            ForEach(Provider.allCases, id: \.self) { card($0) }
+            if forImage { cards } else {
+                // Scrolls only when the cards are taller than the screen allows.
+                ViewThatFits(in: .vertical) { cards; ScrollView { cards } }
+                    .frame(maxHeight: (NSScreen.main?.visibleFrame.height ?? 800) - 120)
+            }
             footer
         }
         .padding(14)
         .frame(width: 350)
+    }
+
+    /// Providers with no login on this Mac are left out here as well as in the menu bar.
+    private var cards: some View {
+        VStack(spacing: 10) { ForEach(shownProviders(store.states), id: \.self) { card($0) } }
     }
 
     private func card(_ p: Provider) -> some View {
@@ -124,9 +133,7 @@ struct PopoverView: View {
                         .background(Capsule().fill(Color.primary.opacity(0.1)))
                 }
             }
-            if state?.notSignedIn == true, let e = state?.error {
-                Text(e).font(.caption).foregroundStyle(.secondary)
-            } else if let snap = state?.snapshot {
+            if let snap = state?.snapshot {
                 ForEach(snap.windows) { windowRow($0) }
                 if let e = state?.error {
                     Label(e, systemImage: "exclamationmark.triangle").font(.caption2).foregroundStyle(.orange)
