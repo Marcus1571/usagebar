@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0 - 2026-11-09
+
+- New provider: GitHub Copilot (Premium requests, Chat and Completions for the month, from `api.github.com/copilot_internal/user`, using the GitHub CLI login via `gh auth token`, read-only). A GitHub account without Copilot is treated as not signed in.
+- Providers without a login are now hidden in the popover as well as the menu bar, so unused providers never show up.
+- The popover scrolls when its cards are taller than the screen.
+
 ## 0.2.1 - 2026-11-09
 
 - A provider with no credentials on this Mac (for example OpenCode not logged in) is now left out of the menu bar instead of showing an orange "!". Its popover card shows a grey "Not signed in: run …" hint and does not turn the footer dot orange. Broken or expired logins and HTTP errors still show "!".

@@ -11,7 +11,9 @@ Exhaustive reference. The pitch, provider table and quick build steps are in
 | Extra refreshes | on wake and when the popover opens, never more than once a minute | `Store.swift` |
 | Colour thresholds | orange at 40 % left or less, red at 20 % left or less (bars: green above 40 %) | `Views.swift` |
 | Stale data | a failed fetch keeps the last good snapshot, shown dimmed | `Model.swift` |
-| Not signed in | a provider with no credentials on this Mac is left out of the menu bar (no "!"); its popover card shows a grey "Not signed in: run …" hint and the footer dot stays green. Broken logins and HTTP errors still show "!" | `Model.swift`, `Views.swift` |
+| Not signed in | a provider with no credentials on this Mac (or, for Copilot, a GitHub account without Copilot: HTTP 404) is left out of the menu bar and the popover, and does not turn the footer dot orange. Broken logins and HTTP errors still show "!" | `Model.swift`, `Views.swift` |
+| Popover height | scrolls only when the cards are taller than the screen's visible height minus 120 pt | `Views.swift` |
+| Copilot windows | Premium requests, Chat, Completions, all monthly (`quota_reset_date_utc`); unlimited quotas and zero entitlements are skipped; plan "Free" when `access_type_sku` contains "free" | `Fetch.swift` |
 | Claude login | cached in memory until it expires; HTTP 401/403 clears it and shows "use Claude Code once" | `Fetch.swift` |
 | Grok renewal | when the token is stale, runs `grok models` at most once every 20 minutes | `Fetch.swift` |
 
@@ -38,7 +40,7 @@ build/UsageBar --open            # launch and auto-open the popover (handy for s
 ```
 Sources/UsageBar/
   Model.swift      Provider, UsageWindow, Snapshot, ProviderState
-  Fetch.swift      credentials readers and the four provider clients
+  Fetch.swift      credentials readers and the five provider clients
   Store.swift      refresh logic (rate limit, concurrent fetch, keeps last good data)
   Views.swift      menu-bar label (rendered to an image) and popover
   SelfTest.swift   parser, label and formatting checks
