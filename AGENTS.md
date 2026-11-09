@@ -1,8 +1,9 @@
 # AGENTS.md — UsageBar
 
 **Read first:** at the start of every session in this project, read `GOVERNANCE.md` and
-`USER.md` from the operator's Obsidian vault on the home server (see GOVERNANCE.md, "The two
-fixed, universal files"). They hold the operator's cross-project defaults. This file governs
+`USER.md` from their working copy, the operator's private governance repository on GitHub
+(backups: the Obsidian vault on the home server and Notion; see GOVERNANCE.md, "The two fixed,
+universal files"). They hold the operator's cross-project defaults. This file governs
 when the two disagree on a project-specific fact; cross-cutting principles (secrets
 handling, destructive-action caution) still apply here regardless.
 

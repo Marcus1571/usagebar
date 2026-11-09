@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1 - 2026-11-09
+
+- A provider with no credentials on this Mac (for example OpenCode not logged in) is now left out of the menu bar instead of showing an orange "!". Its popover card shows a grey "Not signed in: run …" hint and does not turn the footer dot orange. Broken or expired logins and HTTP errors still show "!".
+
 ## 0.2.0 - 2026-11-07
 
 - New provider: OpenCode Go (5-hour, weekly and monthly usage from the official `/zen/go/v1/usage` endpoint, key read from the OpenCode CLI's `auth.json`, read-only).

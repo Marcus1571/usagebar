@@ -11,6 +11,7 @@ Exhaustive reference. The pitch, provider table and quick build steps are in
 | Extra refreshes | on wake and when the popover opens, never more than once a minute | `Store.swift` |
 | Colour thresholds | orange at 40 % left or less, red at 20 % left or less (bars: green above 40 %) | `Views.swift` |
 | Stale data | a failed fetch keeps the last good snapshot, shown dimmed | `Model.swift` |
+| Not signed in | a provider with no credentials on this Mac is left out of the menu bar (no "!"); its popover card shows a grey "Not signed in: run …" hint and the footer dot stays green. Broken logins and HTTP errors still show "!" | `Model.swift`, `Views.swift` |
 | Claude login | cached in memory until it expires; HTTP 401/403 clears it and shows "use Claude Code once" | `Fetch.swift` |
 | Grok renewal | when the token is stale, runs `grok models` at most once every 20 minutes | `Fetch.swift` |
 
@@ -26,7 +27,7 @@ This repository ships **no certificates, no signed binaries and no Apple account
 ## Command line
 
 ```sh
-build/UsageBar --selftest        # parser checks against real response shapes (no network)
+build/UsageBar --selftest        # parser and label checks against real response shapes (no network)
 build/UsageBar --dump            # fetch once and print the numbers, no UI
 build/UsageBar --render DIR      # write label and popover PNGs with live data
 build/UsageBar --open            # launch and auto-open the popover (handy for screenshots)
@@ -37,10 +38,10 @@ build/UsageBar --open            # launch and auto-open the popover (handy for s
 ```
 Sources/UsageBar/
   Model.swift      Provider, UsageWindow, Snapshot, ProviderState
-  Fetch.swift      credentials readers and the three provider clients
+  Fetch.swift      credentials readers and the four provider clients
   Store.swift      refresh logic (rate limit, concurrent fetch, keeps last good data)
   Views.swift      menu-bar label (rendered to an image) and popover
-  SelfTest.swift   parser and formatting checks
+  SelfTest.swift   parser, label and formatting checks
   main.swift       app delegate, status item, CLI modes
 scripts/build-app.sh   build, bundle, sign, install
 scripts/make-icon.sh   icon/icon.svg -> icon/AppIcon.icns (needs librsvg)

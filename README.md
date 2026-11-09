@@ -14,7 +14,7 @@ A small macOS menu-bar app that shows how much of your **Claude**, **ChatGPT (Co
   <img src="docs/popover-dark.png" width="330" alt="Popover, dark">
 </p>
 
-- **Menu bar:** one glyph per provider with up to two stacked numbers (for example the 5-hour and weekly windows), framed in a thin pill. Numbers turn orange below 40% left and red below 20%, and dim when the data is stale.
+- **Menu bar:** one glyph per provider with up to two stacked numbers (for example the 5-hour and weekly windows), framed in a thin pill. Numbers turn orange below 40% left and red below 20%, and dim when the data is stale. Providers you are not signed in to [stay out of the bar](KB.md#behavior-constants) instead of showing a warning.
 - **Popover:** a card per provider with plan, each limit window, a bar, and "Resets in …". A **Left / Used** toggle flips every number.
 - **Refresh:** every 5 minutes, on wake, and when you open the popover (never more than once a minute).
 - **Native and tiny:** SwiftUI + AppKit, about 800 lines, no dependencies, no Dock icon.
