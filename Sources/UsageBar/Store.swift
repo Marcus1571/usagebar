@@ -27,8 +27,11 @@ final class Store: ObservableObject {
             for await (p, result) in group {
                 var s = states[p] ?? ProviderState()
                 switch result {
-                case .success(let snap): s.snapshot = snap; s.error = nil; s.updatedAt = Date()
-                case .failure(let f): s.error = f.message
+                case .success(let snap): s.snapshot = snap; s.error = nil; s.notSignedIn = false; s.updatedAt = Date()
+                case .failure(let f):
+                    s.error = f.message
+                    s.notSignedIn = f.notSignedIn
+                    if f.notSignedIn { s.snapshot = nil }   // signed out: old numbers no longer apply
                 }
                 states[p] = s
             }

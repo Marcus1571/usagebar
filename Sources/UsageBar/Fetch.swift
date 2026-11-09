@@ -111,7 +111,7 @@ enum Claude {
         var cached = true
         var creds = await cache.get()
         if creds == nil { creds = await readCreds(); cached = false }
-        guard var c = creds else { throw Failure("Not signed in: run `claude` once") }
+        guard var c = creds else { throw Failure("Not signed in: run `claude` once", notSignedIn: true) }
         if let exp = c.expiresAt, exp < Date() {
             // the cached one ran out: the CLI may have renewed the login since
             guard cached, let fresh = await readCreds(), (fresh.expiresAt ?? .distantFuture) > Date() else { await cache.clear(); throw Failure(staleMessage) }
@@ -207,7 +207,7 @@ enum Codex {
         let path = NSHomeDirectory() + "/.codex/auth.json"
         guard let d = FileManager.default.contents(atPath: path),
               let tokens = jsonObject(d)?["tokens"] as? [String: Any],
-              let token = tokens["access_token"] as? String else { throw Failure("Not signed in: run `codex` once") }
+              let token = tokens["access_token"] as? String else { throw Failure("Not signed in: run `codex` once", notSignedIn: true) }
         var headers = ["Authorization": "Bearer \(token)"]
         if let id = tokens["account_id"] as? String { headers["ChatGPT-Account-Id"] = id }
         let (status, data) = try await Http.get(url, headers)
@@ -264,7 +264,7 @@ enum Grok {
     }
 
     static func fetch() async throws -> Snapshot {
-        guard var c = readCreds() else { throw Failure("Not signed in: run `grok` once") }
+        guard var c = readCreds() else { throw Failure("Not signed in: run `grok` once", notSignedIn: true) }
         if (c.expiresAt ?? .distantFuture) < Date().addingTimeInterval(60), await renewViaCLI(), let fresh = readCreds() { c = fresh }
         var (status, data) = try await Http.get(url, ["Authorization": "Bearer \(c.token)"])
         if status == 401, await renewViaCLI(), let fresh = readCreds() {
@@ -311,7 +311,7 @@ enum OpenCodeGo {
     }
 
     static func fetch() async throws -> Snapshot {
-        guard let key = readKey() else { throw Failure("Not signed in: run `opencode auth login`") }
+        guard let key = readKey() else { throw Failure("Not signed in: run `opencode auth login`", notSignedIn: true) }
         let (status, data) = try await Http.get(url, ["Authorization": "Bearer \(key)"])
         switch status {
         case 200..<300: return try parse(data)

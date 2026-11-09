@@ -36,7 +36,7 @@ struct LabelView: View {
         let base: Color = dark ? .white : .black
         let framed = style > 0
         HStack(spacing: style == 2 ? 0 : 9) {
-            ForEach(Array(Provider.allCases.enumerated()), id: \.offset) { i, p in
+            ForEach(Array(shownProviders(states).enumerated()), id: \.offset) { i, p in
                 if style == 2 && i > 0 { Rectangle().fill(base.opacity(0.3)).frame(width: 1, height: 14).padding(.horizontal, 8) }
                 item(p)
             }
@@ -124,7 +124,9 @@ struct PopoverView: View {
                         .background(Capsule().fill(Color.primary.opacity(0.1)))
                 }
             }
-            if let snap = state?.snapshot {
+            if state?.notSignedIn == true, let e = state?.error {
+                Text(e).font(.caption).foregroundStyle(.secondary)
+            } else if let snap = state?.snapshot {
                 ForEach(snap.windows) { windowRow($0) }
                 if let e = state?.error {
                     Label(e, systemImage: "exclamationmark.triangle").font(.caption2).foregroundStyle(.orange)
@@ -161,7 +163,7 @@ struct PopoverView: View {
 
     private var footer: some View {
         HStack(spacing: 8) {
-            let failing = store.states.values.contains { $0.error != nil }
+            let failing = store.states.values.contains { $0.error != nil && !$0.notSignedIn }
             Circle().fill(failing ? Color.orange : Color.green).frame(width: 8, height: 8)
             TimelineView(.periodic(from: .now, by: 15)) { ctx in
                 Text(agoText(store.lastUpdate, now: ctx.date)).font(.caption).foregroundStyle(.secondary)
@@ -201,7 +203,7 @@ struct Bar: View {
 
 /// Identity of everything the label shows; equal keys mean the image would be identical.
 func labelKey(states: [Provider: ProviderState], showLeft: Bool) -> String {
-    Provider.allCases.map { p in
+    shownProviders(states).map { p in
         let s = states[p]
         let w = (s?.snapshot?.windows ?? []).prefix(2).map { "\(Int((showLeft ? $0.leftPercent : $0.usedPercent).rounded()))/\($0.leftPercent <= 20 ? 2 : $0.leftPercent <= 40 ? 1 : 0)" }
         return "\(w.joined(separator: ","))\(s?.error != nil ? "!" : "")"

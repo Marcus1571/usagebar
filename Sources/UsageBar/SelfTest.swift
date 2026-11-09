@@ -70,6 +70,13 @@ func selfTest() {
     } else { check(false, "opencode go: parses") }
     check((try? OpenCodeGo.parse(Data("{}".utf8))) == nil, "opencode go: empty response is an error")
 
+    // menu bar: a provider with no credentials is left out; a real error still shows
+    var st: [Provider: ProviderState] = [:]
+    st[.opencodeGo] = ProviderState(error: "Not signed in", notSignedIn: true)
+    st[.grok] = ProviderState(error: "Grok billing returned HTTP 500")
+    check(shownProviders(st) == [.claude, .codex, .grok], "label: not-signed-in provider hidden, failing one kept")
+    check(labelKey(states: st, showLeft: true).split(separator: "|", omittingEmptySubsequences: false).count == 3, "label key: hidden provider not counted")
+
     // formatting
     let now = Date(timeIntervalSince1970: 1_000_000)
     check(resetText(now.addingTimeInterval(2 * 3600 + 10 * 60 + 5), now: now) == "Resets in 2h 10m", "format: hours")

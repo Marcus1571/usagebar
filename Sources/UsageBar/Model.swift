@@ -38,7 +38,9 @@ struct Snapshot: Equatable, Sendable {
 
 struct Failure: Error, Sendable {
     let message: String
-    init(_ message: String) { self.message = message }
+    /// No credentials on this Mac at all (as opposed to a broken or expired login).
+    let notSignedIn: Bool
+    init(_ message: String, notSignedIn: Bool = false) { self.message = message; self.notSignedIn = notSignedIn }
 }
 
 /// What the UI shows for one provider. A failure keeps the last good snapshot ("stale").
@@ -46,4 +48,10 @@ struct ProviderState: Sendable {
     var snapshot: Snapshot?
     var error: String?
     var updatedAt: Date?
+    var notSignedIn = false
+}
+
+/// Providers the menu bar shows: one with no credentials on this Mac is left out instead of showing "!".
+func shownProviders(_ states: [Provider: ProviderState]) -> [Provider] {
+    Provider.allCases.filter { states[$0]?.notSignedIn != true }
 }
