@@ -7,12 +7,15 @@ Exhaustive reference. The pitch, provider table and quick build steps are in
 
 | What | Value | Where |
 |---|---|---|
-| Refresh interval | 300 s, timer tolerance 60 s | `main.swift` |
+| Refresh interval | a Setting: 60/120/300/600/900 s, default 300 s; timer tolerance `min(60, interval / 2)`; rescheduled on change | `Store.swift`, `main.swift` |
 | Extra refreshes | on wake and when the popover opens, never more than once a minute | `Store.swift` |
+
 | Colour thresholds | orange at 40 % left or less, red at 20 % left or less (bars: green above 40 %) | `Views.swift` |
 | Stale data | a failed fetch keeps the last good snapshot, shown dimmed | `Model.swift` |
 | Not signed in | a provider with no credentials on this Mac (or, for Copilot, a GitHub account without Copilot: HTTP 404) is left out of the menu bar and the popover, and does not turn the footer dot orange. Broken logins and HTTP errors still show "!" | `Model.swift`, `Views.swift` |
-| Hidden providers | the popover header's gear menu lists every provider; clicking one toggles whether it is shown (checkmark = shown). Hidden ones are left out of the menu bar and popover, alongside signed-out ones. The set persists in UserDefaults `hiddenProviders`. Hiding the last visible provider is disabled, so the menu bar never goes blank | `Store.swift`, `Model.swift`, `Views.swift` |
+| Hidden providers | the Settings window (opened from the popover's gear) has a toggle per provider; off means hidden. Hidden ones are left out of the menu bar and popover, alongside signed-out ones. The set persists in UserDefaults `hiddenProviders`. Turning off the last visible provider is disabled, so the menu bar never goes blank | `Store.swift`, `Model.swift`, `Settings.swift` |
+| Label style | Setting with a live preview; 0 Plain, 1 Outline, 2 Outline with dividers, 3 Pill, 4 Pill with outline (default). Persisted in UserDefaults `labelStyle`, part of the label key | `Settings.swift`, `Views.swift` |
+| Settings window | fixed-size titled window, created on first open and kept for reuse; the app activates when it opens | `main.swift` |
 | Popover height | scrolls only when the cards are taller than the screen's visible height minus 120 pt | `Views.swift` |
 | Copilot windows | Premium requests, Chat, Completions, all monthly (`quota_reset_date_utc`); unlimited quotas and zero entitlements are skipped; plan "Free" when `access_type_sku` contains "free" | `Fetch.swift` |
 | Claude login | cached in memory until it expires; HTTP 401/403 clears it and shows "use Claude Code once" | `Fetch.swift` |
@@ -44,6 +47,7 @@ Sources/UsageBar/
   Fetch.swift      credentials readers and the five provider clients
   Store.swift      refresh logic (rate limit, concurrent fetch, keeps last good data)
   Views.swift      menu-bar label (rendered to an image) and popover
+  Settings.swift   the Settings window (providers, label style, refresh interval)
   SelfTest.swift   parser, label and formatting checks
   main.swift       app delegate, status item, CLI modes
 scripts/build-app.sh   build, bundle, sign, install

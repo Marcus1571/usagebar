@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0 - 2026-11-10
+
+- New: a proper Settings window, opened from the popover's gear button (the 0.4.0 dropdown menu is gone; the gear opens Settings instead).
+  - **Providers:** a toggle per provider to show/hide it (same never-blank-the-menu-bar guard; signed-out providers say so).
+  - **Menu bar:** Left/Used, and the label style — Plain, Outline, Outline with dividers, Pill, Pill with outline — with a live preview drawn by the real label component using current data.
+  - **Refresh:** fetch interval, 1/2/5/10/15 minutes (default 5). The repeating timer is rescheduled on change; tolerance scales down with short intervals.
+- Code: new `Settings.swift` (`SettingsView`); `Store.swift` gained persisted `labelStyle` (default 4) and `refreshInterval` (default 300 s); `labelStyle` is threaded through `LabelView`, `labelKey()`, `renderLabel()`/`adaptiveLabel()` and included in the label key, so the image re-renders when the style changes. `main.swift` owns the settings `NSWindow` (created on first open, kept for reuse, fixed size) and reschedules the timer on `store.$refreshInterval`. `--render` also writes settings-window PNGs (the snapshot helper was generalised to `snapshotWindow`).
+- `toggleHidden()` removed from `Store` — the Settings toggle binds directly to the hidden set.
+
 ## 0.4.0 - 2026-11-10
 
 - New: a gear menu in the popover header shows or hides any provider — click it, then click a provider to toggle it; a checkmark means shown. Hidden providers are left out of the menu bar and the popover, and the choice persists across launches (UserDefaults `hiddenProviders`).
