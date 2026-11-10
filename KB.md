@@ -12,6 +12,7 @@ Exhaustive reference. The pitch, provider table and quick build steps are in
 | Colour thresholds | orange at 40 % left or less, red at 20 % left or less (bars: green above 40 %) | `Views.swift` |
 | Stale data | a failed fetch keeps the last good snapshot, shown dimmed | `Model.swift` |
 | Not signed in | a provider with no credentials on this Mac (or, for Copilot, a GitHub account without Copilot: HTTP 404) is left out of the menu bar and the popover, and does not turn the footer dot orange. Broken logins and HTTP errors still show "!" | `Model.swift`, `Views.swift` |
+| Hidden providers | the popover header's gear menu lists every provider; clicking one toggles whether it is shown (checkmark = shown). Hidden ones are left out of the menu bar and popover, alongside signed-out ones. The set persists in UserDefaults `hiddenProviders`. Hiding the last visible provider is disabled, so the menu bar never goes blank | `Store.swift`, `Model.swift`, `Views.swift` |
 | Popover height | scrolls only when the cards are taller than the screen's visible height minus 120 pt | `Views.swift` |
 | Copilot windows | Premium requests, Chat, Completions, all monthly (`quota_reset_date_utc`); unlimited quotas and zero entitlements are skipped; plan "Free" when `access_type_sku` contains "free" | `Fetch.swift` |
 | Claude login | cached in memory until it expires; HTTP 401/403 clears it and shows "use Claude Code once" | `Fetch.swift` |

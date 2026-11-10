@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.0 - 2026-11-10
+
+- New: a gear menu in the popover header shows or hides any provider — click it, then click a provider to toggle it; a checkmark means shown. Hidden providers are left out of the menu bar and the popover, and the choice persists across launches (UserDefaults `hiddenProviders`).
+- Providers signed out are marked "Not signed in" inside the menu; hiding the last visible provider is disabled so the menu bar never goes blank.
+- Code: `Model.swift` `shownProviders()` gained a `hidden` set parameter threaded through `LabelView`, `labelKey()` and the label renderers (`Views.swift`), so the label re-renders when only membership changes (key includes the filter; no new observers or timers). `Store.swift` holds the persisted `hiddenProviders` set with a `toggleHidden()` action. Docs screenshots' gear icon is a static look-alike, as with the other native controls.
 ## 0.3.0 - 2026-11-09
 
 - New provider: GitHub Copilot (Premium requests, Chat and Completions for the month, from `api.github.com/copilot_internal/user`, using the GitHub CLI login via `gh auth token`, read-only). A GitHub account without Copilot is treated as not signed in.
