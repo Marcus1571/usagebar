@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.0 - 2026-11-10
+
+- Public-app distribution, same stack as diskled-plus and NeverSleep: Developer ID–signed app (hardened runtime, timestamped), notarized + stapled DMG, and Sparkle 2.10.1 self-updating (startup + weekly checks, automatic installs, "Check for Updates…" in Settings). The EdDSA appcast (`appcast.xml` on repo `main`) uses the operator's key pair shared with the sibling projects.
+- New `Updater.swift`: Sparkle wrapper compiled only when the framework is present (`#if canImport(Sparkle)`), so the dev build stays dependency-free; it also refuses to start on a bare (non-bundle) run. Settings gained an Updates section with the manual check button.
+- New scripts: `fetch-sparkle.sh` (pinned 2.10.1, SHA-256-verified, into gitignored `.build/sparkle`), `make-dmg.sh` (Developer ID + notarize + staple via the shared `diskledplus-notary` keychain profile), `make-appcast.sh` (signs the DMG with `sign_update`, writes `appcast.xml`). `build-app.sh` reworked: the version now follows the latest CHANGELOG heading (no more hand-bumped plist), `CFBundleVersion` is the numeric Sparkle stamp (0.6.0 → 600), `SPARKLE=1` builds to `build/UsageBar-dist` + bundle so the dev `build/UsageBar --selftest` binary is never clobbered, Developer ID signing uses hardened runtime + timestamp and signs the framework deepest-first, `NSHighResolutionCapable` added.
+- **Bundle identifier changed** from `local.usagebar` to `com.usagebar.app` for the public release; existing local settings (hidden providers, label style, refresh interval) reset once on first launch of the new identifier.
+
 ## 0.5.0 - 2026-11-10
 
 - New: a proper Settings window, opened from the popover's gear button (the 0.4.0 dropdown menu is gone; the gear opens Settings instead).

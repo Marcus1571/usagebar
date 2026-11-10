@@ -21,13 +21,28 @@ Exhaustive reference. The pitch, provider table and quick build steps are in
 | Claude login | cached in memory until it expires; HTTP 401/403 clears it and shows "use Claude Code once" | `Fetch.swift` |
 | Grok renewal | when the token is stale, runs `grok models` at most once every 20 minutes | `Fetch.swift` |
 
-## Signing and distribution
+## Distribution and updates
 
-This repository ships **no certificates, no signed binaries and no Apple account details**. You build and sign your own copy:
+GitHub Releases ship a **Developer ID–signed, notarized + stapled DMG** (`UsageBar-<version>.dmg`), built by:
+
+```sh
+SIGN_IDENTITY="Developer ID Application: Marco Dal Moro (NGPL7S3YX3)" scripts/make-dmg.sh
+```
+
+- The DMG staging has the app plus an `/Applications` symlink; the DMG container itself is also signed, then notarized via the shared `diskledplus-notary` keychain profile (same Apple ID as diskled-plus and NeverSleep; override with `NOTARY_PROFILE`) and stapled. Without the profile it warns and skips notarization (local-use only).
+- `SPARKLE=1` (set by `make-dmg.sh`) fetches pinned **Sparkle 2.10.1** (`scripts/fetch-sparkle.sh`, SHA-256-verified, into gitignored `.build/sparkle/` — nothing Sparkle is committed), links the updater (`-F .build/sparkle`), embeds `Sparkle.framework` in `Contents/Frameworks`, adds the `SU*` keys, and signs deepest-first (framework → app) with hardened runtime + timestamp. A Sparkle-linked build compiles to `build/UsageBar-dist` so the dev `build/UsageBar` used by `--selftest` stays dependency-free.
+- **Updater code** (`Sources/UsageBar/Updater.swift`) exists only when the framework is present (`#if canImport(Sparkle)`): `SPUStandardUpdaterController` drives startup + weekly checks (`SUScheduledCheckInterval = 604800`), auto-installs (`SUAutomaticallyUpdate`), and backs the "Check for Updates…" button in Settings. First automatic check shows Sparkle's standard one-time consent prompt. It refuses to start on a bare non-bundle run.
+- **Verification chain:** the app embeds `SUPublicEDKey` `4X6j0DXdJCmcxqe3fkMKWxKuuHhhM+rYrK5LauHe9UA=` (the operator's key pair, shared with the sibling projects; private key in the login keychain, never in the repo); the appcast enclosure's EdDSA signature is what makes Sparkle accept an update. Apple notarized the DMG.
+- **Numeric version mapping:** `CFBundleVersion` = major·10000 + minor·100 + patch (0.6.0 → 600). `sparkle:version` in appcast.xml uses the same mapping; Sparkle compares numerically.
+- **Appcast lifecycle per release, in order:** (1) `make-dmg.sh`, (2) `make-appcast.sh <version>` → commit `appcast.xml`, (3) tag, (4) `gh release create` with the DMG attached, (5) push `main`. The feed URL serves the *main* branch's `appcast.xml`; it must not point at an enclosure that doesn't exist yet, hence release-before-push.
+- Bundle identifier: `com.usagebar.app` (changed from `local.usagebar` in 0.6.0; override with `BUNDLE_ID=`).
+
+## Building from source
+
+You can also build your own copy with no Apple account:
 
 - **Default:** ad-hoc signature (`codesign --sign -`). It runs fine on the Mac that built it and needs no Apple account.
-- **Your own certificate:** `SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" ./scripts/build-app.sh` signs with your Developer ID. Notarize it yourself with `xcrun notarytool` if you want to hand it to other people without a Gatekeeper warning.
-- **Your own bundle id:** the default is `local.usagebar`; override it with `BUNDLE_ID=com.example.usagebar`.
+- **Your own certificate:** `SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" ./scripts/build-app.sh` signs with your Developer ID (add `SPARKLE=1` for the self-updating bundle).
 - **Sharing an ad-hoc build:** Gatekeeper blocks a downloaded copy on another Mac. Open System Settings → Privacy & Security and choose **Open Anyway**, or run `xattr -dr com.apple.quarantine UsageBar.app`. Building from source on that Mac avoids the warning.
 
 ## Command line
@@ -48,9 +63,13 @@ Sources/UsageBar/
   Store.swift      refresh logic (rate limit, concurrent fetch, keeps last good data)
   Views.swift      menu-bar label (rendered to an image) and popover
   Settings.swift   the Settings window (providers, label style, refresh interval)
+  Updater.swift    Sparkle wrapper (only compiled when the framework is present)
   SelfTest.swift   parser, label and formatting checks
   main.swift       app delegate, status item, CLI modes
-scripts/build-app.sh   build, bundle, sign, install
+scripts/build-app.sh   build, bundle, sign, install (SPARKLE=1 for the self-updating bundle)
+scripts/make-dmg.sh    distribution DMG: Developer ID sign, notarize, staple
+scripts/make-appcast.sh  regenerate appcast.xml (EdDSA-signed Sparkle feed)
+scripts/fetch-sparkle.sh download the pinned Sparkle release into .build/sparkle
 scripts/make-icon.sh   icon/icon.svg -> icon/AppIcon.icns (needs librsvg)
 ```
 
@@ -60,4 +79,6 @@ scripts/make-icon.sh   icon/icon.svg -> icon/AppIcon.icns (needs librsvg)
 | Variable | Default | Effect |
 |---|---|---|
 | `SIGN_IDENTITY` | `-` (ad-hoc) | codesign identity used by `scripts/build-app.sh` |
-| `BUNDLE_ID` | `local.usagebar` | bundle identifier of the built app |
+| `BUNDLE_ID` | `com.usagebar.app` | bundle identifier of the built app |
+| `SPARKLE` | `0` | `1` fetches + embeds Sparkle, links the updater and adds the `SU*` keys |
+| `VERSION` | latest CHANGELOG heading | version stamped into the bundle and the DMG/appcast names |
