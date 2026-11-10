@@ -16,6 +16,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     var timer: Timer?
     var lastLabelKey = ""
 
+    // Sparkle lives only in packaged builds (SPARKLE=1); a bare dev run has no bundle to update.
+    lazy var updater: (() -> Void)? = {
+        #if canImport(Sparkle)
+        guard Bundle.main.bundleIdentifier != nil else { return nil }
+        return { Updater.shared.checkForUpdates() }
+        #else
+        return nil
+        #endif
+    }()
+
     func applicationDidFinishLaunching(_ note: Notification) {
         item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         item.button?.target = self
@@ -62,7 +72,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     func openSettings() {
         NSApp.activate(ignoringOtherApps: true)
         if let w = settingsWindow { w.makeKeyAndOrderFront(nil); return }
-        let host = NSHostingController(rootView: SettingsView(store: store))
+        let host = NSHostingController(rootView: SettingsView(store: store, onCheckForUpdates: updater))
         let w = NSWindow(contentViewController: host)
         w.title = "UsageBar Settings"
         w.styleMask = [.titled, .closable]   // fixed size, no grow box

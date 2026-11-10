@@ -4,6 +4,7 @@ import SwiftUI
 /// preview is the real label component drawn with the current data, so style choices are honest.
 struct SettingsView: View {
     @ObservedObject var store: Store
+    var onCheckForUpdates: (() -> Void)? = nil   // present only in packaged builds (Sparkle)
 
     private var visibleCount: Int {
         shownProviders(store.states, hidden: store.hiddenProviders).count
@@ -51,6 +52,13 @@ struct SettingsView: View {
                     Text("5 minutes").tag(5)
                     Text("10 minutes").tag(10)
                     Text("15 minutes").tag(15)
+                }
+            }
+            if let onCheckForUpdates {
+                Section("Updates") {
+                    Button("Check for Updates…") { onCheckForUpdates() }
+                    Text("New versions are also checked automatically at startup and once a week, and install without asking.")
+                        .font(.caption).foregroundStyle(.secondary)
                 }
             }
         }
