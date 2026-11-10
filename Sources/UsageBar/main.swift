@@ -25,10 +25,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         popover.delegate = self   // the SwiftUI content only exists while the popover is open
 
         store.objectWillChange.sink { [weak self] _ in DispatchQueue.main.async { self?.updateLabel() } }.store(in: &cancellables)
-        timer = Timer.scheduledTimer(withTimeInterval: 300, repeats: true) { [weak self] _ in
-            Task { @MainActor in await self?.store.refresh() }
-        }
-        timer?.tolerance = 60   // lets macOS batch our wake-up with other work
+        scheduleTimer(store.refreshInterval)
+        store.$refreshInterval.sink { [weak self] interval in self?.scheduleTimer(interval) }.store(in: &cancellables)
         NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
             Task { @MainActor in await self?.store.refresh() }
         }
@@ -39,19 +37,51 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         }
     }
 
+    /// One repeating refresh timer, rescheduled when the interval changes in Settings.
+    func scheduleTimer(_ interval: TimeInterval) {
+        timer?.invalidate()
+        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+            Task { @MainActor in await self?.store.refresh() }
+        }
+        timer?.tolerance = min(60, interval / 2)   // lets macOS batch our wake-up with other work
+    }
+
     /// Re-renders only when something visible changed. The image draws itself in the menu bar's own
     /// appearance, so there is no appearance observer (observing it and re-setting the image loops forever).
     func updateLabel() {
-        let key = labelKey(states: store.states, showLeft: store.showLeft, hidden: store.hiddenProviders)
+        let key = labelKey(states: store.states, showLeft: store.showLeft, hidden: store.hiddenProviders, style: store.labelStyle)
         guard key != lastLabelKey else { return }
         lastLabelKey = key
-        item.button?.image = adaptiveLabel(states: store.states, showLeft: store.showLeft, hidden: store.hiddenProviders)
+        item.button?.image = adaptiveLabel(states: store.states, showLeft: store.showLeft, hidden: store.hiddenProviders, style: store.labelStyle)
+    }
+
+    // MARK: settings window
+
+    var settingsWindow: NSWindow?
+
+    func openSettings() {
+        NSApp.activate(ignoringOtherApps: true)
+        if let w = settingsWindow { w.makeKeyAndOrderFront(nil); return }
+        let host = NSHostingController(rootView: SettingsView(store: store))
+        let w = NSWindow(contentViewController: host)
+        w.title = "UsageBar Settings"
+        w.styleMask = [.titled, .closable]   // fixed size, no grow box
+        w.setContentSize(host.view.fittingSize)
+        w.center()
+        w.isReleasedWhenClosed = false
+        w.tabbingMode = .disallowed
+        settingsWindow = w
+        w.makeKeyAndOrderFront(nil)
     }
 
     @objc func toggle() {
         if popover.isShown { popover.performClose(nil); return }
         guard let b = item.button else { return }
-        let host = NSHostingController(rootView: PopoverView(store: store, onQuit: { NSApp.terminate(nil) }))
+        let host = NSHostingController(rootView: PopoverView(
+            store: store,
+            onSettings: { [weak self] in self?.openSettings() },
+            onQuit: { NSApp.terminate(nil) }
+        ))
         host.sizingOptions = .preferredContentSize   // popover follows the SwiftUI content height
         popover.contentViewController = host
         popover.contentSize = host.view.fittingSize
@@ -73,11 +103,11 @@ func savePNG(_ view: some View, _ name: String, _ dir: String) {
     print("wrote \(dir)/\(name).png")
 }
 
-/// Draws the actual hosted popover (native segmented control and buttons included) in-process.
+/// Draws a hosted SwiftUI view (native controls included) in-process, off-screen, never visible.
 @MainActor
-func snapshotPopover(store: Store, dark: Bool, to path: String) {
+func snapshotWindow(rootView: some View, dark: Bool, to path: String) {
     _ = NSApplication.shared
-    let host = NSHostingView(rootView: PopoverView(store: store))
+    let host = NSHostingView(rootView: rootView)
     host.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
     let size = host.fittingSize
     host.frame = NSRect(origin: .zero, size: size)
@@ -94,6 +124,11 @@ func snapshotPopover(store: Store, dark: Bool, to path: String) {
     try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: path))
     win.orderOut(nil)
     print("wrote \(path)")
+}
+
+@MainActor
+func snapshotPopover(store: Store, dark: Bool, to path: String) {
+    snapshotWindow(rootView: PopoverView(store: store), dark: dark, to: path)
 }
 
 let args = CommandLine.arguments
@@ -119,6 +154,8 @@ if args.contains("--selftest") {
             savePNG(PopoverView(store: store, forImage: true).background(Color(nsColor: .windowBackgroundColor)).environment(\.colorScheme, .dark), "popover-dark", dir)
             snapshotPopover(store: store, dark: true, to: "\(dir)/real-popover-dark.png")
             snapshotPopover(store: store, dark: false, to: "\(dir)/real-popover-light.png")
+            snapshotWindow(rootView: SettingsView(store: store), dark: true, to: "\(dir)/settings-dark.png")
+            snapshotWindow(rootView: SettingsView(store: store), dark: false, to: "\(dir)/settings-light.png")
             for dark in [true, false] {
                 savePNG(VStack(alignment: .leading, spacing: 8) { ForEach(0..<5) { LabelView(states: store.states, showLeft: true, dark: dark, style: $0) } }
                     .padding(12).background(dark ? Color(red: 0.2, green: 0.3, blue: 0.5) : Color(white: 0.93)), "styles-\(dark ? "dark" : "light")", dir)

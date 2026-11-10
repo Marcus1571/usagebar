@@ -86,12 +86,14 @@ func selfTest() {
     st[.opencodeGo] = ProviderState(error: "Not signed in", notSignedIn: true)
     st[.grok] = ProviderState(error: "Grok billing returned HTTP 500")
     check(shownProviders(st) == [.claude, .codex, .grok, .copilot], "label: not-signed-in provider hidden, failing one kept")
-    check(labelKey(states: st, showLeft: true).split(separator: "|", omittingEmptySubsequences: false).count == 4, "label key: hidden provider not counted")
+    check(labelKey(states: st, showLeft: true).split(separator: "|", omittingEmptySubsequences: false).count == 5, "label key: hidden provider not counted")   // style prefix + 4 providers
 
     // menu bar: a provider the user hid in the popover's gear menu is left out too
     check(shownProviders(st, hidden: [.grok]) == [.claude, .codex, .copilot], "label: manually hidden provider left out")
-    check(labelKey(states: st, showLeft: true, hidden: [.grok]).split(separator: "|", omittingEmptySubsequences: false).count == 3,
-          "label key: membership changes with the hidden set")
+    check(labelKey(states: st, showLeft: true, hidden: [.grok]).split(separator: "|", omittingEmptySubsequences: false).count == 4,
+          "label key: membership changes with the hidden set")   // style prefix + 3 providers
+    check(labelKey(states: st, showLeft: true, style: 4) != labelKey(states: st, showLeft: true, style: 3),
+          "label key: changes with the style")
 
     // formatting
     let now = Date(timeIntervalSince1970: 1_000_000)

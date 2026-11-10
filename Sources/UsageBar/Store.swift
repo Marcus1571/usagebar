@@ -12,11 +12,13 @@ final class Store: ObservableObject {
     ) {
         didSet { UserDefaults.standard.set(hiddenProviders.map(\.rawValue), forKey: "hiddenProviders") }
     }
-
-    /// Menu action: show or hide one provider.
-    func toggleHidden(_ p: Provider) {
-        if hiddenProviders.contains(p) { hiddenProviders.remove(p) } else { hiddenProviders.insert(p) }
+    @Published var labelStyle: Int = UserDefaults.standard.object(forKey: "labelStyle") as? Int ?? 4 {
+        didSet { UserDefaults.standard.set(labelStyle, forKey: "labelStyle") }
     }
+    @Published var refreshInterval: TimeInterval = UserDefaults.standard.object(forKey: "refreshInterval") as? TimeInterval ?? 300 {
+        didSet { UserDefaults.standard.set(refreshInterval, forKey: "refreshInterval") }
+    }
+
     private var lastRefresh = Date.distantPast
 
     var lastUpdate: Date? { states.values.compactMap(\.updatedAt).max() }
