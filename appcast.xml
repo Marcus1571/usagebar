@@ -1,0 +1,21 @@
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>UsageBar</title>
+    <link>https://raw.githubusercontent.com/Marcus1571/usagebar/main/appcast.xml</link>
+    <description>Most recent UsageBar releases.</description>
+    <language>en</language>
+    <item>
+      <title>Version 0.6.0</title>
+      <pubDate>Tue, 10 Nov 2026 22:49:34 GMT</pubDate>
+      <sparkle:releaseNotesLink>https://github.com/Marcus1571/usagebar/releases/tag/v0.6.0</sparkle:releaseNotesLink>
+      <enclosure url="https://github.com/Marcus1571/usagebar/releases/download/v0.6.0/UsageBar-0.6.0.dmg"
+                 sparkle:version="600"
+                 sparkle:shortVersionString="0.6.0"
+                 sparkle:edSignature="HYUZXmz0cBKi0H4oUTazh6P230GcbWhJZI4wkfQUaYZnYrJG03cWXH9p2fsZ+RgVdJEfbzs9xfBXF1s4/KTHAA=="
+                 length="1610377"
+                 type="application/octet-stream" />
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+    </item>
+  </channel>
+</rss>
