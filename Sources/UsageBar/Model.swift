@@ -53,7 +53,8 @@ struct ProviderState: Sendable {
     var notSignedIn = false
 }
 
-/// Providers the menu bar shows: one with no credentials on this Mac is left out instead of showing "!".
-func shownProviders(_ states: [Provider: ProviderState]) -> [Provider] {
-    Provider.allCases.filter { states[$0]?.notSignedIn != true }
+/// Providers the menu bar shows: one with no credentials on this Mac is left out instead of showing "!",
+/// and any the user hid in the popover's provider menu.
+func shownProviders(_ states: [Provider: ProviderState], hidden: Set<Provider> = []) -> [Provider] {
+    Provider.allCases.filter { states[$0]?.notSignedIn != true && !hidden.contains($0) }
 }

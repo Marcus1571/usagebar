@@ -7,6 +7,16 @@ final class Store: ObservableObject {
     @Published var showLeft: Bool = UserDefaults.standard.object(forKey: "showLeft") as? Bool ?? true {
         didSet { UserDefaults.standard.set(showLeft, forKey: "showLeft") }
     }
+    @Published var hiddenProviders: Set<Provider> = Set(
+        (UserDefaults.standard.object(forKey: "hiddenProviders") as? [String] ?? []).compactMap(Provider.init(rawValue:))
+    ) {
+        didSet { UserDefaults.standard.set(hiddenProviders.map(\.rawValue), forKey: "hiddenProviders") }
+    }
+
+    /// Menu action: show or hide one provider.
+    func toggleHidden(_ p: Provider) {
+        if hiddenProviders.contains(p) { hiddenProviders.remove(p) } else { hiddenProviders.insert(p) }
+    }
     private var lastRefresh = Date.distantPast
 
     var lastUpdate: Date? { states.values.compactMap(\.updatedAt).max() }

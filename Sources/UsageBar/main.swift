@@ -42,10 +42,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     /// Re-renders only when something visible changed. The image draws itself in the menu bar's own
     /// appearance, so there is no appearance observer (observing it and re-setting the image loops forever).
     func updateLabel() {
-        let key = labelKey(states: store.states, showLeft: store.showLeft)
+        let key = labelKey(states: store.states, showLeft: store.showLeft, hidden: store.hiddenProviders)
         guard key != lastLabelKey else { return }
         lastLabelKey = key
-        item.button?.image = adaptiveLabel(states: store.states, showLeft: store.showLeft)
+        item.button?.image = adaptiveLabel(states: store.states, showLeft: store.showLeft, hidden: store.hiddenProviders)
     }
 
     @objc func toggle() {

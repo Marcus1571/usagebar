@@ -88,6 +88,11 @@ func selfTest() {
     check(shownProviders(st) == [.claude, .codex, .grok, .copilot], "label: not-signed-in provider hidden, failing one kept")
     check(labelKey(states: st, showLeft: true).split(separator: "|", omittingEmptySubsequences: false).count == 4, "label key: hidden provider not counted")
 
+    // menu bar: a provider the user hid in the popover's gear menu is left out too
+    check(shownProviders(st, hidden: [.grok]) == [.claude, .codex, .copilot], "label: manually hidden provider left out")
+    check(labelKey(states: st, showLeft: true, hidden: [.grok]).split(separator: "|", omittingEmptySubsequences: false).count == 3,
+          "label key: membership changes with the hidden set")
+
     // formatting
     let now = Date(timeIntervalSince1970: 1_000_000)
     check(resetText(now.addingTimeInterval(2 * 3600 + 10 * 60 + 5), now: now) == "Resets in 2h 10m", "format: hours")

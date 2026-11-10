@@ -29,6 +29,7 @@ func limitColor(left: Double) -> Color { left > 40 ? .green : left > 20 ? .orang
 struct LabelView: View {
     let states: [Provider: ProviderState]
     let showLeft: Bool
+    var hidden: Set<Provider> = []
     let dark: Bool
     var style = 4   // 0 none, 1 outline, 2 outline + dividers, 3 filled pill, 4 filled + outline
 
@@ -36,7 +37,7 @@ struct LabelView: View {
         let base: Color = dark ? .white : .black
         let framed = style > 0
         HStack(spacing: style == 2 ? 0 : 9) {
-            ForEach(Array(shownProviders(states).enumerated()), id: \.offset) { i, p in
+            ForEach(Array(shownProviders(states, hidden: hidden).enumerated()), id: \.offset) { i, p in
                 if style == 2 && i > 0 { Rectangle().fill(base.opacity(0.3)).frame(width: 1, height: 14).padding(.horizontal, 8) }
                 item(p)
             }
@@ -96,12 +97,15 @@ struct PopoverView: View {
                         }
                     }
                     .padding(2).background(RoundedRectangle(cornerRadius: 7).fill(Color.primary.opacity(0.08)))
+                    // static stand-in for the gear menu, which ImageRenderer cannot draw
+                    Image(systemName: "gearshape").font(.system(size: 13, weight: .medium)).foregroundStyle(.secondary).padding(.leading, 6)
                 } else {
                     Picker("", selection: $store.showLeft) {
                         Text("Left").tag(true)
                         Text("Used").tag(false)
                     }
                     .pickerStyle(.segmented).labelsHidden().frame(width: 120)
+                    providerMenu
                 }
             }
             if forImage { cards } else {
@@ -115,9 +119,38 @@ struct PopoverView: View {
         .frame(width: 350)
     }
 
-    /// Providers with no login on this Mac are left out here as well as in the menu bar.
+    /// Providers with no login on this Mac, or hidden in the menu, are left out here as well as in the menu bar.
     private var cards: some View {
-        VStack(spacing: 10) { ForEach(shownProviders(store.states), id: \.self) { card($0) } }
+        VStack(spacing: 10) { ForEach(shownProviders(store.states, hidden: store.hiddenProviders), id: \.self) { card($0) } }
+    }
+
+    /// Dropdown listing every provider; a checkmark means it is shown in the menu bar and here.
+    private var providerMenu: some View {
+        Menu {
+            ForEach(Provider.allCases, id: \.self) { p in
+                Button {
+                    store.toggleHidden(p)
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "checkmark").font(.system(size: 11, weight: .semibold))
+                            .frame(width: 12).opacity(store.hiddenProviders.contains(p) ? 0 : 1)
+                        Image(systemName: p.symbol).font(.system(size: 12)).frame(width: 14)
+                        Text(p.title)
+                        if store.states[p]?.notSignedIn == true {
+                            Text("Not signed in").font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                .disabled(store.hiddenProviders.contains(p) == false
+                    && shownProviders(store.states, hidden: store.hiddenProviders).count == 1)   // never blank the menu bar
+            }
+        } label: {
+            Image(systemName: "gearshape").font(.system(size: 13, weight: .medium))
+        }
+        .menuStyle(.borderlessButton).menuIndicator(.hidden)
+        .fixedSize().padding(3)
+        .contentShape(Rectangle())   // the whole icon is the click target
+        .help("Choose which providers are shown")
     }
 
     private func card(_ p: Provider) -> some View {
@@ -209,8 +242,8 @@ struct Bar: View {
 // MARK: - rendering
 
 /// Identity of everything the label shows; equal keys mean the image would be identical.
-func labelKey(states: [Provider: ProviderState], showLeft: Bool) -> String {
-    shownProviders(states).map { p in
+func labelKey(states: [Provider: ProviderState], showLeft: Bool, hidden: Set<Provider> = []) -> String {
+    shownProviders(states, hidden: hidden).map { p in
         let s = states[p]
         let w = (s?.snapshot?.windows ?? []).prefix(2).map { "\(Int((showLeft ? $0.leftPercent : $0.usedPercent).rounded()))/\($0.leftPercent <= 20 ? 2 : $0.leftPercent <= 40 ? 1 : 0)" }
         return "\(w.joined(separator: ","))\(s?.error != nil ? "!" : "")"
@@ -218,8 +251,8 @@ func labelKey(states: [Provider: ProviderState], showLeft: Bool) -> String {
 }
 
 @MainActor
-func renderLabel(states: [Provider: ProviderState], showLeft: Bool, dark: Bool) -> NSImage? {
-    let r = ImageRenderer(content: LabelView(states: states, showLeft: showLeft, dark: dark))
+func renderLabel(states: [Provider: ProviderState], showLeft: Bool, hidden: Set<Provider>, dark: Bool) -> NSImage? {
+    let r = ImageRenderer(content: LabelView(states: states, showLeft: showLeft, hidden: hidden, dark: dark))
     r.scale = NSScreen.main?.backingScaleFactor ?? 2
     guard let cg = r.cgImage else { return nil }
     let img = NSImage(cgImage: cg, size: NSSize(width: CGFloat(cg.width) / r.scale, height: CGFloat(cg.height) / r.scale))
@@ -230,9 +263,9 @@ func renderLabel(states: [Provider: ProviderState], showLeft: Bool, dark: Bool) 
 /// One image holding a light and a dark rendering; AppKit picks the right one when it draws, using the
 /// appearance of whatever it draws into (the menu bar). No observer needed.
 @MainActor
-func adaptiveLabel(states: [Provider: ProviderState], showLeft: Bool) -> NSImage? {
-    guard let light = renderLabel(states: states, showLeft: showLeft, dark: false),
-          let dark = renderLabel(states: states, showLeft: showLeft, dark: true) else { return nil }
+func adaptiveLabel(states: [Provider: ProviderState], showLeft: Bool, hidden: Set<Provider> = []) -> NSImage? {
+    guard let light = renderLabel(states: states, showLeft: showLeft, hidden: hidden, dark: false),
+          let dark = renderLabel(states: states, showLeft: showLeft, hidden: hidden, dark: true) else { return nil }
     let img = NSImage(size: light.size, flipped: false) { rect in
         let isDark = NSAppearance.currentDrawing().bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
         (isDark ? dark : light).draw(in: rect)
