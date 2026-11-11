@@ -81,6 +81,7 @@ struct LabelView: View {
 struct PopoverView: View {
     @ObservedObject var store: Store
     var onSettings: () -> Void = {}
+    var onAbout: () -> Void = {}
     var onQuit: () -> Void = {}
     var forImage = false   // ImageRenderer cannot draw native controls; docs screenshots use look-alikes
 
@@ -184,12 +185,15 @@ struct PopoverView: View {
             Spacer()
             if forImage {
                 Image(systemName: "arrow.clockwise").foregroundStyle(.secondary)
+                Image(systemName: "info.circle").foregroundStyle(.secondary)
                 Image(systemName: "power").foregroundStyle(.secondary)
             } else {
                 Button { Task { await store.refresh(force: true) } } label: {
                     if store.refreshing { ProgressView().controlSize(.small) } else { Image(systemName: "arrow.clockwise") }
                 }
                 .buttonStyle(.borderless).help("Refresh now")
+                Button(action: onAbout) { Image(systemName: "info.circle") }
+                    .buttonStyle(.borderless).help("About UsageBar")
                 Button(action: onQuit) { Image(systemName: "power") }
                     .buttonStyle(.borderless).help("Quit UsageBar")
             }

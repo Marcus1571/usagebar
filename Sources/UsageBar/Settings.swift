@@ -88,3 +88,37 @@ struct SettingsView: View {
         )
     }
 }
+
+/// The About window, opened from the popover's ⓘ button — the standard macOS mini page: logo,
+/// name and version, author, license, project links.
+struct AboutView: View {
+    var body: some View {
+        VStack(spacing: 10) {
+            if let icon = Bundle.main.image(forResource: "AppIcon") {
+                Image(nsImage: icon).resizable().scaledToFit().frame(width: 72, height: 72)
+            } else {
+                Image(systemName: "chart.bar.fill").font(.system(size: 34)).foregroundStyle(.secondary)
+                    .frame(width: 72, height: 72)   // bare dev run: no bundle icon to show
+            }
+            Text("UsageBar").font(.title2.bold())
+            Text(versionLine).font(.caption).foregroundStyle(.secondary)
+            Text("How much of your Claude, ChatGPT (Codex), Grok, OpenCode Go and GitHub Copilot quota is left, at a glance — read-only, and credentials go only to each provider's own host.")
+                .font(.caption).foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+            Divider()
+            Text("by Marco Dal Moro").font(.caption)
+            Text("Released under the MIT License.").font(.caption).foregroundStyle(.secondary)
+            HStack(spacing: 16) {
+                Link("GitHub Repository", destination: URL(string: "https://github.com/Marcus1571/usagebar")!)
+                Link("License", destination: URL(string: "https://github.com/Marcus1571/usagebar/blob/main/LICENSE")!)
+            }
+            .font(.caption)
+        }
+        .padding(20).frame(width: 300)
+    }
+
+    private var versionLine: String {
+        if let v = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String { return "Version \(v)" }
+        return "Development build"
+    }
+}

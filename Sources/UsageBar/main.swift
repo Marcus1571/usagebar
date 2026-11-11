@@ -68,6 +68,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     // MARK: settings window
 
     var settingsWindow: NSWindow?
+    var aboutWindow: NSWindow?
+
+    func openAbout() {
+        NSApp.activate(ignoringOtherApps: true)
+        if let w = aboutWindow { w.makeKeyAndOrderFront(nil); return }
+        let host = NSHostingController(rootView: AboutView())
+        let w = NSWindow(contentViewController: host)
+        w.title = "About UsageBar"
+        w.styleMask = [.titled, .closable]   // fixed size, like Settings
+        w.setContentSize(host.view.fittingSize)
+        w.center()
+        w.isReleasedWhenClosed = false
+        w.tabbingMode = .disallowed
+        aboutWindow = w
+        w.makeKeyAndOrderFront(nil)
+    }
 
     func openSettings() {
         NSApp.activate(ignoringOtherApps: true)
@@ -90,6 +106,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         let host = NSHostingController(rootView: PopoverView(
             store: store,
             onSettings: { [weak self] in self?.openSettings() },
+            onAbout: { [weak self] in self?.openAbout() },
             onQuit: { NSApp.terminate(nil) }
         ))
         host.sizingOptions = .preferredContentSize   // popover follows the SwiftUI content height
@@ -166,6 +183,8 @@ if args.contains("--selftest") {
             snapshotPopover(store: store, dark: false, to: "\(dir)/real-popover-light.png")
             snapshotWindow(rootView: SettingsView(store: store), dark: true, to: "\(dir)/settings-dark.png")
             snapshotWindow(rootView: SettingsView(store: store), dark: false, to: "\(dir)/settings-light.png")
+            snapshotWindow(rootView: AboutView(), dark: true, to: "\(dir)/about-dark.png")
+            snapshotWindow(rootView: AboutView(), dark: false, to: "\(dir)/about-light.png")
             for dark in [true, false] {
                 savePNG(VStack(alignment: .leading, spacing: 8) { ForEach(0..<5) { LabelView(states: store.states, showLeft: true, dark: dark, style: $0) } }
                     .padding(12).background(dark ? Color(red: 0.2, green: 0.3, blue: 0.5) : Color(white: 0.93)), "styles-\(dark ? "dark" : "light")", dir)
