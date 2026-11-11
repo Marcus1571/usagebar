@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.0 - 2026-11-11
+
+- New: an **About** line in the popover's footer (an ⓘ button between Refresh and Quit) opens a small About window in the standard macOS mini-page style: the app logo, name and version, a one-line description, the author (Marco Dal Moro), the MIT license note, and links to the GitHub repository and the LICENSE file.
+- Code: new `AboutView` in `Settings.swift`; `main.swift` owns the `aboutWindow` (created on first open and kept for reuse, fixed size — same pattern as the Settings window); `PopoverView` gained an `onAbout` callback. `--render` now also writes the About window's PNGs (`about-light/dark.png`) for the docs set. The version line reads `CFBundleShortVersionString` from the bundle; a bare dev run shows "Development build" and an SF-symbol stand-in for the icon.
+
 ## 0.7.0 - 2026-11-11
 
 - **Fix: settings survive bundle-id changes and app moves.** The four settings (Left/Used, hidden providers, label style, refresh interval) now live in `~/Library/Application Support/UsageBar/settings.json` instead of UserDefaults, which is keyed to the bundle identifier: 0.6.0's id change (`local.usagebar` → `com.usagebar.app`) made the app read a fresh domain on first launch and silently reset every setting to defaults (observed 2026-11-11 as Left/Used reverting to Left after a reboot). A file in a fixed folder cannot have that happen again.
