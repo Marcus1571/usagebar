@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.0 - 2026-11-11
+
+- **Fix: settings survive bundle-id changes and app moves.** The four settings (Left/Used, hidden providers, label style, refresh interval) now live in `~/Library/Application Support/UsageBar/settings.json` instead of UserDefaults, which is keyed to the bundle identifier: 0.6.0's id change (`local.usagebar` → `com.usagebar.app`) made the app read a fresh domain on first launch and silently reset every setting to defaults (observed 2026-11-11 as Left/Used reverting to Left after a reboot). A file in a fixed folder cannot have that happen again.
+- New `AppSettings.swift`: a small JSON-file settings store. On a first launch with no settings file it imports once from the old store — the standard UserDefaults domain (whatever the current bundle id is), with any key it lacks filled from the pre-0.6.0 `local.usagebar` domain — and the written file is the done-flag: the legacy plists are left untouched and never read again. An existing but unreadable file imports nothing, so stale legacy values can never overwrite newer choices.
+- Code: `Store.swift`'s four settings read and write `AppSettings` instead of `UserDefaults.standard`; defaults and behavior unchanged. Sparkle's own keys (update checks) stay in UserDefaults.
+- SelfTest: settings round-trip, one-time import (current domain wins, legacy fills gaps), no-re-import-after-the-file-exists checks against throwaway suites and a temp file.
+
 ## 0.6.0 - 2026-11-10
 
 - Public-app distribution, same stack as diskled-plus and NeverSleep: Developer ID–signed app (hardened runtime, timestamped), notarized + stapled DMG, and Sparkle 2.10.1 self-updating (startup + weekly checks, automatic installs, "Check for Updates…" in Settings). The EdDSA appcast (`appcast.xml` on repo `main`) uses the operator's key pair shared with the sibling projects.

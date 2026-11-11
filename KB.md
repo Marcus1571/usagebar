@@ -13,8 +13,9 @@ Exhaustive reference. The pitch, provider table and quick build steps are in
 | Colour thresholds | orange at 40 % left or less, red at 20 % left or less (bars: green above 40 %) | `Views.swift` |
 | Stale data | a failed fetch keeps the last good snapshot, shown dimmed | `Model.swift` |
 | Not signed in | a provider with no credentials on this Mac (or, for Copilot, a GitHub account without Copilot: HTTP 404) is left out of the menu bar and the popover, and does not turn the footer dot orange. Broken logins and HTTP errors still show "!" | `Model.swift`, `Views.swift` |
-| Hidden providers | the Settings window (opened from the popover's gear) has a toggle per provider; off means hidden. Hidden ones are left out of the menu bar and popover, alongside signed-out ones. The set persists in UserDefaults `hiddenProviders`. Turning off the last visible provider is disabled, so the menu bar never goes blank | `Store.swift`, `Model.swift`, `Settings.swift` |
-| Label style | Setting with a live preview; 0 Plain, 1 Outline, 2 Outline with dividers, 3 Pill, 4 Pill with outline (default). Persisted in UserDefaults `labelStyle`, part of the label key | `Settings.swift`, `Views.swift` |
+| Hidden providers | the Settings window (opened from the popover's gear) has a toggle per provider; off means hidden. Hidden ones are left out of the menu bar and popover, alongside signed-out ones. The set persists in the JSON settings file (`hiddenProviders`). Turning off the last visible provider is disabled, so the menu bar never goes blank | `Store.swift`, `Model.swift`, `Settings.swift` |
+| Label style | Setting with a live preview; 0 Plain, 1 Outline, 2 Outline with dividers, 3 Pill, 4 Pill with outline (default). Persisted in the JSON settings file (`labelStyle`), part of the label key | `Settings.swift`, `Views.swift` |
+| Settings store | `~/Library/Application Support/UsageBar/settings.json`, deliberately independent of the bundle identifier (UserDefaults is keyed to it, and 0.6.0's id change silently reset every setting). On a first launch with no file, one-time import from the standard UserDefaults domain with missing keys filled from the pre-0.6.0 `local.usagebar` domain; the file is the done-flag, legacy plists left untouched. Sparkle's own keys stay in UserDefaults | `AppSettings.swift`, `Store.swift` |
 | Settings window | fixed-size titled window, created on first open and kept for reuse; the app activates when it opens | `main.swift` |
 | Popover height | scrolls only when the cards are taller than the screen's visible height minus 120 pt | `Views.swift` |
 | Copilot windows | Premium requests, Chat, Completions, all monthly (`quota_reset_date_utc`); unlimited quotas and zero entitlements are skipped; plan "Free" when `access_type_sku` contains "free" | `Fetch.swift` |
@@ -35,7 +36,7 @@ SIGN_IDENTITY="Developer ID Application: Marco Dal Moro (NGPL7S3YX3)" scripts/ma
 - **Verification chain:** the app embeds `SUPublicEDKey` `4X6j0DXdJCmcxqe3fkMKWxKuuHhhM+rYrK5LauHe9UA=` (the operator's key pair, shared with the sibling projects; private key in the login keychain, never in the repo); the appcast enclosure's EdDSA signature is what makes Sparkle accept an update. Apple notarized the DMG.
 - **Numeric version mapping:** `CFBundleVersion` = major·10000 + minor·100 + patch (0.6.0 → 600). `sparkle:version` in appcast.xml uses the same mapping; Sparkle compares numerically.
 - **Appcast lifecycle per release, in order:** (1) `make-dmg.sh`, (2) `make-appcast.sh <version>` → commit `appcast.xml`, (3) tag, (4) `gh release create` with the DMG attached, (5) push `main`. The feed URL serves the *main* branch's `appcast.xml`; it must not point at an enclosure that doesn't exist yet, hence release-before-push.
-- Bundle identifier: `com.usagebar.app` (changed from `local.usagebar` in 0.6.0; override with `BUNDLE_ID=`).
+- Bundle identifier: `com.usagebar.app` (changed from `local.usagebar` in 0.6.0; override with `BUNDLE_ID=`). Settings moved out of UserDefaults in 0.7.0 (see the "Settings store" row above) precisely so an id change can never reset them again.
 
 ## Building from source
 
@@ -61,6 +62,7 @@ Sources/UsageBar/
   Model.swift      Provider, UsageWindow, Snapshot, ProviderState
   Fetch.swift      credentials readers and the five provider clients
   Store.swift      refresh logic (rate limit, concurrent fetch, keeps last good data)
+  AppSettings.swift  settings JSON file (bundle-id-independent) + one-time import from UserDefaults
   Views.swift      menu-bar label (rendered to an image) and popover
   Settings.swift   the Settings window (providers, label style, refresh interval)
   Updater.swift    Sparkle wrapper (only compiled when the framework is present)
