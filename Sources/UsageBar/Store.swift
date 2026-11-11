@@ -4,19 +4,21 @@ import Foundation
 final class Store: ObservableObject {
     @Published var states: [Provider: ProviderState] = [:]
     @Published var refreshing = false
-    @Published var showLeft: Bool = UserDefaults.standard.object(forKey: "showLeft") as? Bool ?? true {
-        didSet { UserDefaults.standard.set(showLeft, forKey: "showLeft") }
+    // Settings persist in AppSettings (a bundle-id-independent JSON file), not UserDefaults:
+    // see AppSettings.swift for why.
+    @Published var showLeft: Bool = AppSettings.object(forKey: "showLeft") as? Bool ?? true {
+        didSet { AppSettings.set(showLeft, forKey: "showLeft") }
     }
     @Published var hiddenProviders: Set<Provider> = Set(
-        (UserDefaults.standard.object(forKey: "hiddenProviders") as? [String] ?? []).compactMap(Provider.init(rawValue:))
+        (AppSettings.object(forKey: "hiddenProviders") as? [String] ?? []).compactMap(Provider.init(rawValue:))
     ) {
-        didSet { UserDefaults.standard.set(hiddenProviders.map(\.rawValue), forKey: "hiddenProviders") }
+        didSet { AppSettings.set(hiddenProviders.map(\.rawValue), forKey: "hiddenProviders") }
     }
-    @Published var labelStyle: Int = UserDefaults.standard.object(forKey: "labelStyle") as? Int ?? 4 {
-        didSet { UserDefaults.standard.set(labelStyle, forKey: "labelStyle") }
+    @Published var labelStyle: Int = AppSettings.object(forKey: "labelStyle") as? Int ?? 4 {
+        didSet { AppSettings.set(labelStyle, forKey: "labelStyle") }
     }
-    @Published var refreshInterval: TimeInterval = UserDefaults.standard.object(forKey: "refreshInterval") as? TimeInterval ?? 300 {
-        didSet { UserDefaults.standard.set(refreshInterval, forKey: "refreshInterval") }
+    @Published var refreshInterval: TimeInterval = AppSettings.object(forKey: "refreshInterval") as? TimeInterval ?? 300 {
+        didSet { AppSettings.set(refreshInterval, forKey: "refreshInterval") }
     }
 
     private var lastRefresh = Date.distantPast

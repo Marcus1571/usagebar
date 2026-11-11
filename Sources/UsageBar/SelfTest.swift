@@ -102,6 +102,37 @@ func selfTest() {
     check(resetText(now.addingTimeInterval(20), now: now) == "Resets in 1m", "format: under a minute")
     check(resetText(now.addingTimeInterval(-5), now: now) == "Resetting…", "format: past")
 
+    // settings: JSON-file round-trip, one-time import (current domain wins, legacy fills gaps),
+    // and no re-import once the file exists
+    let settingsDir = URL(fileURLWithPath: NSTemporaryDirectory())
+        .appendingPathComponent("usagebar-selftest-settings-\(UUID().uuidString)", isDirectory: true)
+    AppSettings.fileURL = settingsDir.appendingPathComponent("settings.json")
+    let curName = "usagebar-selftest-current-\(UUID().uuidString)", legName = "usagebar-selftest-legacy-\(UUID().uuidString)"
+    AppSettings.currentDomain = UserDefaults(suiteName: curName)!
+    AppSettings.legacyDomain = UserDefaults(suiteName: legName)!
+    AppSettings.currentDomain.set(false, forKey: "showLeft")              // current domain wins
+    AppSettings.currentDomain.set(["grok"], forKey: "hiddenProviders")
+    AppSettings.legacyDomain?.set(2, forKey: "labelStyle")                 // legacy fills the gaps
+    AppSettings.legacyDomain?.set(120.0, forKey: "refreshInterval")
+    AppSettings.cache = nil
+    check(AppSettings.object(forKey: "showLeft") as? Bool == false, "settings: imported from the current domain")
+    check(AppSettings.object(forKey: "labelStyle") as? Int == 2, "settings: missing key filled from the legacy domain")
+    check(AppSettings.object(forKey: "refreshInterval") as? TimeInterval == 120, "settings: legacy numbers survive the JSON round-trip")
+    check(AppSettings.object(forKey: "hiddenProviders") as? [String] == ["grok"], "settings: arrays survive the JSON round-trip")
+    check(FileManager.default.fileExists(atPath: AppSettings.fileURL.path), "settings: import wrote the file")
+
+    AppSettings.set(true, forKey: "showLeft")
+    AppSettings.cache = nil   // force a fresh read from disk
+    check(AppSettings.object(forKey: "showLeft") as? Bool == true, "settings: writes round-trip through the file")
+
+    AppSettings.legacyDomain?.set(true, forKey: "showLeft")   // legacy value changes after the import
+    AppSettings.cache = nil
+    check(AppSettings.object(forKey: "showLeft") as? Bool == true, "settings: no re-import once the file exists")
+
+    try? FileManager.default.removeItem(at: settingsDir)
+    AppSettings.currentDomain.removePersistentDomain(forName: curName)
+    AppSettings.legacyDomain?.removePersistentDomain(forName: legName)
+
     print(failures == 0 ? "\nall checks passed" : "\n\(failures) FAILED")
     exit(failures == 0 ? 0 : 1)
 }
