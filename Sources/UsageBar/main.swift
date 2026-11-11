@@ -30,6 +30,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         item.button?.target = self
         item.button?.action = #selector(toggle)
+        // One behavior for every mouse button: left and right click both open the popover.
+        item.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
 
         popover.behavior = .transient
         popover.delegate = self   // the SwiftUI content only exists while the popover is open
