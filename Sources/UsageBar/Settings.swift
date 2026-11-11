@@ -89,36 +89,38 @@ struct SettingsView: View {
     }
 }
 
-/// The About window, opened from the popover's ⓘ button — the standard macOS mini page: logo,
-/// name and version, author, license, project links.
+/// The About window, opened from the popover's ⓘ button — the same mini page as NeverSleep's:
+/// the app icon at 96 pt, name, "Version x (build y)", © line with the operator's public
+/// identity (Marcus1571, not the real name), the license, the GitHub repo and a one-line tagline.
 struct AboutView: View {
-    var body: some View {
-        VStack(spacing: 10) {
-            if let icon = Bundle.main.image(forResource: "AppIcon") {
-                Image(nsImage: icon).resizable().scaledToFit().frame(width: 72, height: 72)
-            } else {
-                Image(systemName: "chart.bar.fill").font(.system(size: 34)).foregroundStyle(.secondary)
-                    .frame(width: 72, height: 72)   // bare dev run: no bundle icon to show
-            }
-            Text("UsageBar").font(.title2.bold())
-            Text(versionLine).font(.caption).foregroundStyle(.secondary)
-            Text("How much of your Claude, ChatGPT (Codex), Grok, OpenCode Go and GitHub Copilot quota is left, at a glance — read-only, and credentials go only to each provider's own host.")
-                .font(.caption).foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-            Divider()
-            Text("by Marco Dal Moro").font(.caption)
-            Text("Released under the MIT License.").font(.caption).foregroundStyle(.secondary)
-            HStack(spacing: 16) {
-                Link("GitHub Repository", destination: URL(string: "https://github.com/Marcus1571/usagebar")!)
-                Link("License", destination: URL(string: "https://github.com/Marcus1571/usagebar/blob/main/LICENSE")!)
-            }
-            .font(.caption)
-        }
-        .padding(20).frame(width: 300)
+    private var version: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
+    }
+    private var build: String {
+        Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
     }
 
-    private var versionLine: String {
-        if let v = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String { return "Version \(v)" }
-        return "Development build"
+    var body: some View {
+        VStack(spacing: 10) {
+            Image(nsImage: NSApp.applicationIconImage)
+                .resizable()
+                .frame(width: 96, height: 96)
+                .accessibilityLabel("UsageBar app icon")
+            Text("UsageBar")
+                .font(.title2).fontWeight(.bold)
+            Text("Version \(version) (build \(build))")
+                .font(.caption).foregroundColor(.secondary)
+            Divider()
+            Text("© 2026 Marcus1571").font(.subheadline)
+            Text("MIT").font(.caption).foregroundColor(.secondary)
+            Link("github.com/Marcus1571/usagebar",
+                 destination: URL(string: "https://github.com/Marcus1571/usagebar")!)
+                .font(.subheadline)
+            Text("The remaining quota of your AI coding subscriptions — Claude, ChatGPT (Codex), Grok, OpenCode Go and GitHub Copilot — right in the menu bar. Read-only.")
+                .font(.footnote).foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding(24)
+        .frame(width: 300)
     }
 }
