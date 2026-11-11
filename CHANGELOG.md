@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.2 - 2026-11-12
+
+- New: right-clicking the menu bar icon now opens the popover, same as left-click — one unified mouse behavior for the status item. Code: `main.swift` sets the status item button's action to fire on both `.leftMouseUp` and `.rightMouseUp` (`sendAction(on:)`); `toggle()` is unchanged and no event type is differentiated. No new observers or timers (energy rule intact).
+
 ## 0.8.1 - 2026-11-11
 
 - About window restyled to match NeverSleep's (same layout, same conventions): 96 pt app icon, "Version x (build y)" from the bundle's two version keys, divider, **© 2026 Marcus1571** (public GitHub identity instead of the real name), the license line (UsageBar is MIT-only, so a single "MIT"), one link `github.com/Marcus1571/usagebar`, and a one-line tagline at the bottom. No behavior change.
