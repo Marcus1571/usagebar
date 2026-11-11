@@ -9,6 +9,7 @@ Exhaustive reference. The pitch, provider table and quick build steps are in
 |---|---|---|
 | Refresh interval | a Setting: 60/120/300/600/900 s, default 300 s; timer tolerance `min(60, interval / 2)`; rescheduled on change | `Store.swift`, `main.swift` |
 | Extra refreshes | on wake and when the popover opens, never more than once a minute | `Store.swift` |
+| Menu bar clicks | the status item button fires its action on both `.leftMouseUp` and `.rightMouseUp` (`sendAction(on:)`), so either opens the popover; no event type is differentiated | `main.swift` |
 
 | Colour thresholds | orange at 40 % left or less, red at 20 % left or less (bars: green above 40 %) | `Views.swift` |
 | Stale data | a failed fetch keeps the last good snapshot, shown dimmed | `Model.swift` |
