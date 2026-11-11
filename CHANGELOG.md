@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.1 - 2026-11-11
+
+- About window restyled to match NeverSleep's (same layout, same conventions): 96 pt app icon, "Version x (build y)" from the bundle's two version keys, divider, **© 2026 Marcus1571** (public GitHub identity instead of the real name), the license line (UsageBar is MIT-only, so a single "MIT"), one link `github.com/Marcus1571/usagebar`, and a one-line tagline at the bottom. No behavior change.
+
 ## 0.8.0 - 2026-11-11
 
 - New: an **About** line in the popover's footer (an ⓘ button between Refresh and Quit) opens a small About window in the standard macOS mini-page style: the app logo, name and version, a one-line description, the author (Marco Dal Moro), the MIT license note, and links to the GitHub repository and the LICENSE file.
