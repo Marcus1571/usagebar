@@ -6,14 +6,14 @@
     <description>Most recent UsageBar releases.</description>
     <language>en</language>
     <item>
-      <title>Version 0.8.2</title>
-      <pubDate>Wed, 11 Nov 2026 23:00:56 GMT</pubDate>
-      <sparkle:releaseNotesLink>https://github.com/Marcus1571/usagebar/releases/tag/v0.8.2</sparkle:releaseNotesLink>
-      <enclosure url="https://github.com/Marcus1571/usagebar/releases/download/v0.8.2/UsageBar-0.8.2.dmg"
-                 sparkle:version="802"
-                 sparkle:shortVersionString="0.8.2"
-                 sparkle:edSignature="DHmGEM+52zIYZwQQygYg3ZqXdN6DC7rAggJQ2lOTuzCXqxCKozPKDzYQaHOF/4W4wGUyWCHUO/Ii/2IOSiI+Aw=="
-                 length="1393768"
+      <title>Version 0.9.0</title>
+      <pubDate>Sat, 14 Nov 2026 17:34:39 GMT</pubDate>
+      <sparkle:releaseNotesLink>https://github.com/Marcus1571/usagebar/releases/tag/v0.9.0</sparkle:releaseNotesLink>
+      <enclosure url="https://github.com/Marcus1571/usagebar/releases/download/v0.9.0/UsageBar-0.9.0.dmg"
+                 sparkle:version="900"
+                 sparkle:shortVersionString="0.9.0"
+                 sparkle:edSignature="/fjhRNlp80f3zU5NfEOXsV82dBjz2XgKaYWwXTsw5466jyceAzpTZFvfjVViIF59MIqeXlR8vTLpEdTXUjRHDQ=="
+                 length="1636920"
                  type="application/octet-stream" />
       <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
     </item>
