@@ -109,6 +109,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             store: store,
             onSettings: { [weak self] in self?.openSettings() },
             onAbout: { [weak self] in self?.openAbout() },
+            onBugReport: {
+                NSWorkspace.shared.open(URL(string: "https://github.com/Marcus1571/usagebar/issues")!)
+            },
             onQuit: { NSApp.terminate(nil) }
         ))
         host.sizingOptions = .preferredContentSize   // popover follows the SwiftUI content height

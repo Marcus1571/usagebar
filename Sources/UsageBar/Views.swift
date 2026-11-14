@@ -82,6 +82,7 @@ struct PopoverView: View {
     @ObservedObject var store: Store
     var onSettings: () -> Void = {}
     var onAbout: () -> Void = {}
+    var onBugReport: () -> Void = {}
     var onQuit: () -> Void = {}
     var forImage = false   // ImageRenderer cannot draw native controls; docs screenshots use look-alikes
 
@@ -194,6 +195,8 @@ struct PopoverView: View {
                 .buttonStyle(.borderless).help("Refresh now")
                 Button(action: onAbout) { Image(systemName: "info.circle") }
                     .buttonStyle(.borderless).help("About UsageBar")
+                Button(action: onBugReport) { Image(systemName: "ladybug.fill") }
+                    .buttonStyle(.borderless).help("Report a Bug")
                 Button(action: onQuit) { Image(systemName: "power") }
                     .buttonStyle(.borderless).help("Quit UsageBar")
             }
