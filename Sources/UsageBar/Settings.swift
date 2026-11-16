@@ -149,11 +149,40 @@ struct AboutView: View {
             Link("paypal.me/marcodalmoro",
                  destination: URL(string: "https://paypal.me/marcodalmoro")!)
                 .font(.caption)
-            Text("Point your phone's camera at the code — or tap the link.")
+            // Tier buttons (0.11.0): each opens PayPal.me with the amount
+            // prefilled (paypal.me/<user>/<amount><currency> — the "eur"
+            // suffix pins the currency). Same design as NeverSleep 0.11.
+            tierButtons
+            Text("Scan the code, tap the link, or pick a coffee — a coffee (€1), a burger (€5), a sushi night (€10). Thank you!")
                 .font(.caption2).foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)   // must wrap, not truncate
                 .multilineTextAlignment(.center)
         }
+    }
+
+    /// The three donation tiers: coffee (€1), burger (€5), sushi night (€10).
+    /// Each opens PayPal.me with the amount prefilled in the default browser.
+    private var tierButtons: some View {
+        HStack(spacing: 8) {
+            tierLink("☕️", "€1", "1eur")
+            tierLink("🍔", "€5", "5eur")
+            tierLink("🍣", "€10", "10eur")
+        }
+    }
+
+    private func tierLink(_ emoji: String, _ amount: String, _ path: String) -> some View {
+        Link(destination: URL(string: "https://paypal.me/marcodalmoro/\(path)")!) {
+            VStack(spacing: 2) {
+                Text(emoji).font(.system(size: 17))
+                Text(amount).font(.caption).fontWeight(.semibold)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 7)
+            .background(Color(red: 0.0, green: 0.41, blue: 0.77),
+                        in: RoundedRectangle(cornerRadius: 9))
+            .foregroundColor(.white)
+        }
+        .accessibilityLabel("Donate \(amount) via PayPal")
     }
 
     /// Bug-report block: ladybug + "Report a Bug" + a tappable link to the
