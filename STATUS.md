@@ -1,5 +1,7 @@
 # STATUS
 
+**0.12.0 released** (2026-11-17): About page redesigned to the heat-warning panel card style (icon header 52 pt + ♥ Support / 🐞 Report a Bug / 📄 License & code cards + tagline footer). Full sequence, released, installed to ~/Applications. E2E: built + launched.
+
 Last updated 2026-11-12.
 
 - **Providers:** Claude, Codex (ChatGPT), Grok, OpenCode Go, GitHub Copilot. Next candidate: Antigravity (local language-server quota; needs Antigravity running to capture a real response). See findings.md.
