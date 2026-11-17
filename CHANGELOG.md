@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.11.0 - 2026-11-17
+- New: **About page redesigned to the card style** (the heat-warning panel design language: icon header + soft-background cards with badge + bold title, NeverSleep 0.15.0 pattern): ♥ **Support UsageBar** card (QR + tier buttons + link + caption), 🐞 **Report a Bug** card, 📄 **License & code** card; tagline as the footer. Code: `Settings.swift` AboutView rewritten with the shared `card()` builder; the old flat `supportSection`/`bugSection` blocks are gone. Content unchanged.
+
 ## 0.10.0 - 2026-11-16
 
 - New: **tiered donation buttons on the About page** — ☕ €1 (coffee) · 🍔 €5 (burger) · 🍣 €10 (sushi night), each opening PayPal.me **with the amount prefilled**: `https://paypal.me/marcodalmoro/1eur`, `/5eur`, `/10eur` (documented PayPal.Me format `paypal.me/<user>/<amount><currency>`; verified against PayPal's FAQ). QR and the generic link stay. Code: `Settings.swift` gains `tierButtons` + `tierLink` (blue pill `Link`s with emoji + amount — same design as NeverSleep 0.11.0, where the feature was approved via light/dark mockup); caption reworded.
