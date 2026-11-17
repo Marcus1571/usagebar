@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.12.0 - 2026-11-17
+
+- New: **About page redesigned to the card style** (the heat-warning panel design language, NeverSleep 0.15.0 pattern): icon header (icon 52 pt + name + version, leading-aligned), ♥ **Support UsageBar** card (QR + tier buttons + link + caption), 🐞 **Report a Bug** card, 📄 **License & code** card; tagline as the footer. Code: `Settings.swift` AboutView rewritten with the shared `card()` builder; the old flat `supportSection`/`bugSection` blocks are gone. Content unchanged.
+
 ## 0.11.0 - 2026-11-17
 - New: **About page redesigned to the card style** (the heat-warning panel design language: icon header + soft-background cards with badge + bold title, NeverSleep 0.15.0 pattern): ♥ **Support UsageBar** card (QR + tier buttons + link + caption), 🐞 **Report a Bug** card, 📄 **License & code** card; tagline as the footer. Code: `Settings.swift` AboutView rewritten with the shared `card()` builder; the old flat `supportSection`/`bugSection` blocks are gone. Content unchanged.
 
